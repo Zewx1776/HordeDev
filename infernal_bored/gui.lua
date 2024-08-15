@@ -1,5 +1,5 @@
 local gui = {}
-local plugin_label = "Infernal Horder - Dev Edition"
+local plugin_label = "Infernal Horde - Dev Edition"
 
 local function create_checkbox(key)
     return checkbox:new(false, get_hash(plugin_label .. "_" .. key))
@@ -46,7 +46,7 @@ gui.elements = {
 }
 
 function gui.render()
-    if not gui.elements.main_tree:push("Find and Kill beta") then return end
+    if not gui.elements.main_tree:push("Infernal Horde - Dev Edition") then return end
 
     gui.elements.main_toggle:render("Enable", "Enable the bot")
     
