@@ -1,5 +1,5 @@
 local gui = {}
-local plugin_label = "Find and Kill BETA"
+local plugin_label = "Infernal Horder - Dev Edition"
 
 local function create_checkbox(key)
     return checkbox:new(false, get_hash(plugin_label .. "_" .. key))
