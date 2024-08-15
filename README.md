@@ -2,12 +2,22 @@
 
 **`THIS IS A DEVELOPMENT RELEASE`**
 **`There is an error in the code left purposefully, do not post in the thread about it`**
-**`As a community script any user is welcome to join the development of this script, if you are not a dev (don't worry, I'm not a dev either the majority of this script is thanks to Neer) I HIGHLY recommend loading this repo into Greptile and using Claude to understand and help write the code, its not a magic wand though you still need to learn to comprehend the logic and the structure and the best practices. You will spend lots of time prompting, testing, deleting everything and trying again. The goal is to learn from it and eventually come up with an improvement. When you do post it in the community thread.`**
+**`As a community script any user is welcome to join the development of this script, if you are not a dev (don't worry, I'm not a dev either the majority of this script is thanks to Neer) I HIGHLY recommend loading this repo into Greptile and using Claude to understand and help write the code, its not a magic wand though you still need to learn to comprehend the logic and the structure and the best practices. You will spend lots of time prompting, testing, deleting everything and trying again. The goal is to learn from it and eventually come up with an improvement. When you do post it in the community thread. REQUIRES ORBWALKER CLEAR TOGGLED ON`**
 
 
 ## Overview
 
 Infernal Horde is a Lua-based script designed to automate the infernal hordes. This guide provides a high-level overview of the directory structure, core components, and the task manager's role. It also lists the `shouldExecute` functions for each task in the `/tasks` directory to help new developers understand and contribute to the project.
+
+Current Features
+- **`When in Horde, horde task runs and navigates to spires / masses, make sure orbwalker clear is on to kill monsters using your rotation`**
+- **`Interacts with pylons to select boon/banes based on priority table`**
+- **`Picks up Aether`**
+- **`Interacts with boss door to check if its locked`**
+- **`Enters boss room`**
+- **`When bosses are dead switches task to Open Chests`**
+- **`Opens Chests based on settings in GUI: Always open GA Chest / Open material, gear, or gold`**
+
 
 ## To-Do
 
