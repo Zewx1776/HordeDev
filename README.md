@@ -2,7 +2,14 @@
 
 ## Overview
 
-Infernal Horde is a Lua-based script designed to automate various tasks within the game. This guide provides a high-level overview of the directory structure, core components, and the task manager's role. It also lists the `shouldExecute` functions for each task in the `/tasks` directory to help new developers understand and contribute to the project.
+Infernal Horde is a Lua-based script designed to automate the infernal hordes. This guide provides a high-level overview of the directory structure, core components, and the task manager's role. It also lists the `shouldExecute` functions for each task in the `/tasks` directory to help new developers understand and contribute to the project.
+
+## To-Do
+
+Below is a quick list of things that need to be added, if you would like to tackle these please post in the dev thread and let others know, build in public, and get words of encouragement from other members of the community. 
+
+
+
 
 ## Directory Structure
 
