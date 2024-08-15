@@ -2,7 +2,7 @@
 
 **`THIS IS A DEVELOPMENT RELEASE`**
 **`There is an error in the code left purposefully, do not post in the thread about it`**
-**`As a community script and user is welcome to join the development of this script, if you are not a dev (don't worry, I'm not a dev either the majority of this script is thanks to Neer) I HIGHLY recommend loading this repo into Greptile and using Claude to understand and help write the code, its not a magic wand though you still need to learn to comprehend the logic and the structure and the best practices. You will spend lots of time prompting, testing, deleting everything and trying again. The goal is to learn from it and eventually come up with an improvement. When you do post it in the community thread. `**
+**`As a community script any user is welcome to join the development of this script, if you are not a dev (don't worry, I'm not a dev either the majority of this script is thanks to Neer) I HIGHLY recommend loading this repo into Greptile and using Claude to understand and help write the code, its not a magic wand though you still need to learn to comprehend the logic and the structure and the best practices. You will spend lots of time prompting, testing, deleting everything and trying again. The goal is to learn from it and eventually come up with an improvement. When you do post it in the community thread.`**
 
 
 ## Overview
