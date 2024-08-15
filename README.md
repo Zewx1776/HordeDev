@@ -7,7 +7,14 @@ Infernal Horde is a Lua-based script designed to automate the infernal hordes. T
 ## To-Do
 
 Below is a quick list of things that need to be added, if you would like to tackle these please post in the dev thread and let others know, build in public, and get words of encouragement from other members of the community. 
+- **`Implement core.explorer into horde task`**
+- **`Clean up repo and remove piteer enums, data etc.`**
+- **`Edit open_chests task to open gold when aether < 20 and end task (Requires core functionality not in progress)`**
+- **`Create open infernal horde task (Requires core functionality in progress)`**
+- **`Create exit infernal horde task`**
+- **`Edit Town Salvage/Repair/Sell tasks to tp from horde to vendor and back to horde`**
 
+## Known issues
 
 
 
