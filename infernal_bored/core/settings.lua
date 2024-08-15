@@ -7,7 +7,7 @@ local settings = {
     path_angle = 10,
     reset_time = 1, -- Default to 1
     selected_chest_type = nil, -- Default to material chest
-    always_open_ga_chest = false,
+    always_open_ga_chest = false -- When you fix this, don't tell others where it is, let them learn. 
 }
 
 function settings:update_settings()
