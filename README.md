@@ -16,6 +16,8 @@ Below is a quick list of things that need to be added, if you would like to tack
 
 ## Known issues
 
+- Undiscovered Monsters at horde perimeter prevents script from continuing
+- Potential to get stuck if aether or monster is present after final wave and navigation is required from actor to boss room
 
 
 ## Directory Structure
