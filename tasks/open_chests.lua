@@ -12,6 +12,8 @@ local open_chests_task = {
     Execute = function()
         local current_time = get_time_since_inject()
         console.print(string.format("Execute called at %.2f", current_time))
+        console.print(string.format("Current settings: always_open_ga_chest: %s, selected_chest_type: %s, chest_opening_time: %d", 
+                                    tostring(settings.always_open_ga_chest), tostring(settings.selected_chest_type), settings.chest_opening_time))
 
         local function open_chest(chest)
             if chest then
@@ -28,7 +30,7 @@ local open_chests_task = {
             return false
         end
 
-        -- Try to open GA chest if the option is enabled
+        -- Try to open GA chest if the setting is enabled
         if settings.always_open_ga_chest then
             console.print("Attempting to open GA chest")
             local ga_chest = utils.get_chest("BSK_UniqueOpChest_GreaterAffix")
@@ -44,9 +46,11 @@ local open_chests_task = {
         local chest_type_map = {"GEAR", "MATERIALS", "GOLD"}
         local selected_chest_type = chest_type_map[settings.selected_chest_type + 1]
         local chest_id = enums.chest_types[selected_chest_type]
-
+        
+        console.print(string.format("Attempting to open selected chest type: %s (ID: %s) for %d seconds", 
+                                    selected_chest_type, chest_id, settings.chest_opening_time))
+        
         while (current_time - start_time) < settings.chest_opening_time do
-            console.print(string.format("Attempting to open selected chest type: %s (ID: %s)", selected_chest_type, chest_id))
             local selected_chest = utils.get_chest(chest_id)
             if selected_chest then
                 open_chest(selected_chest)
@@ -56,7 +60,7 @@ local open_chests_task = {
             current_time = get_time_since_inject()
         end
 
-        -- Always open gold chest last, unless it was the selected type
+        -- Always open the gold chest last, unless it was already the selected type
         if selected_chest_type ~= "GOLD" then
             console.print("Opening gold chest")
             local gold_chest = utils.get_chest(enums.chest_types["GOLD"])
