@@ -6,12 +6,19 @@ local gui = require "gui"
 
 local task = {
     name = "Town Salvage",
-    shouldExecute = function()
-        return utils.player_in_zone("Scos_Cerrigar") 
+--UNTESTED CHANGES 
+   shouldExecute = function()
+    return utils.player_in_zone("S05_BSK_Prototype02") 
+        and utils.player_on_quest(2023962)
         and get_local_player():get_item_count() >= 25
-        and settings.loot_modes == gui.loot_modes_enum.SALVAGE  -- Correct reference to the current loot mode setting
-    end,
+        and settings.loot_modes == gui.loot_modes_enum.SALVAGE
+end,
     Execute = function(self)
+    
+    -- Add the teleport function at the beginning of Execute
+    function teleport_to_waypoint(0x76D58) end
+    teleport_to_waypoint(0x76D58)  -- Call the teleport function
+
         local blacksmith = utils.get_blacksmith()
         if blacksmith then
             console.print("Setting target to BLACKSMITH: " .. blacksmith:get_skin_name())
