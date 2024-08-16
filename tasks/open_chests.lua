@@ -16,9 +16,6 @@ local open_chests_task = {
         console.print(string.format("Current settings: always_open_ga_chest: %s, selected_chest_type: %s", 
                                     tostring(settings.always_open_ga_chest), tostring(settings.selected_chest_type)))
 
-        -- Reset the GA chest opened flag at the beginning
-        tracker.ga_chest_opened = false
-
         local function open_chest(chest)
             if chest then
                 console.print(chest:get_skin_name() .. " found, interacting")
@@ -40,7 +37,6 @@ local open_chests_task = {
             console.print("GA chest looting time over. Will not attempt again this session.")
         end
 
-        -- Open GA chest if the setting is enabled and it hasn't been opened yet
         if settings.always_open_ga_chest and not tracker.ga_chest_opened then
             console.print("Attempting to open GA chest")
             if tracker.open_chest_time == 0 or (current_time - tracker.open_chest_time > 10) then
@@ -50,7 +46,6 @@ local open_chests_task = {
                     if success then
                         tracker.open_chest_time = current_time
                         console.print(string.format("GA chest opened at %.2f. Waiting 10 seconds for looting.", tracker.open_chest_time))
-                        return -- Wait for 5 seconds before continuing
                     else
                         console.print("Failed to open GA chest")
                     end
@@ -62,32 +57,33 @@ local open_chests_task = {
             end
         end
 
-        -- Open the selected chest type for the duration specified by the new slider
-        if tracker.check_time("open_chest_time", settings.chest_opening_time) then
+        -- Open the selected chest type if GA chest is not being handled or has already been opened
+        if not settings.always_open_ga_chest or (settings.always_open_ga_chest and tracker.ga_chest_opened) then
             local chest_type_map = {"GEAR", "MATERIALS", "GOLD"}
             local selected_chest_type = chest_type_map[settings.selected_chest_type + 1]
             local chest_id = enums.chest_types[selected_chest_type]
             console.print(string.format("Attempting to open selected chest type: %s (ID: %s)", selected_chest_type, chest_id))
             local selected_chest = utils.get_chest(chest_id)
             if selected_chest then
-                open_chest(selected_chest)
+                if tracker.retry_attempts < tracker.max_retry_attempts then
+                    if tracker.check_time("chest_retry_time", tracker.retry_delay) then
+                        local success = open_chest(selected_chest)
+                        if success then
+                            tracker.retry_attempts = 0 -- Reset retry attempts on success
+                        else
+                            console.print("Failed to open chest. Retrying...")
+                            tracker.retry_attempts = tracker.retry_attempts + 1
+                        end
+                    end
+                else
+                    console.print("Max retry attempts reached. Giving up on opening the chest.")
+                end
             else
                 console.print("Selected chest not found")
-            end
-
-            -- If the selected chest wasn't gold, open the gold chest once
-            if selected_chest_type ~= "GOLD" then
-                local gold_chest = utils.get_chest(enums.chest_types["GOLD"])
-                if gold_chest then
-                    open_chest(gold_chest)
-                end
             end
         else
             console.print("Skipping selected chest opening due to GA chest settings")
         end
-
-        -- Reset the GA chest opened flag at the end
-        tracker.ga_chest_opened = false
 
         console.print(string.format("Execute finished at %.2f, tracker.ga_chest_opened: %s", 
                                     get_time_since_inject(), tostring(tracker.ga_chest_opened)))
