@@ -2,7 +2,6 @@ local utils      = require "core.utils"
 local enums      = require "data.enums"
 local settings   = require "core.settings"
 local navigation = require "core.navigation"
-local tracker    = require "core.tracker"
 
 local bomber = {
     enabled = false,
@@ -243,11 +242,6 @@ end
 function bomber:main_pulse()
     console.print("Main pulse initiated")
 
-    -- Reset the chest opened flag
-    tracker.ga_chest_opened = false
-    tracker.peasant_chest_opening_stopped = false
-    tracker.gold_chest_opened = false
-
     if get_local_player():is_dead() then
         console.print("Player is dead, reviving at checkpoint")
         revive_at_checkpoint()
@@ -284,6 +278,8 @@ function bomber:main_pulse()
     local locked_door = bomber:get_locked_door()
     if locked_door then
         console.print("Locked door found")
+        tracker.reset_chest_trackers()
+        console.print("Restaured Trackers")
         if utils.distance_to(locked_door) > 2 then
             console.print("Locked door is far, moving to locked door")
             bomber:bomb_to(locked_door:get_position())
