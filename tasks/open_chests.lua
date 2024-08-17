@@ -50,14 +50,14 @@ local open_chests_task = {
         end
 
         -- Check if 10 seconds have passed since opening the GA chest
-        if tracker.ga_chest_open_time > 0 and (current_time - tracker.ga_chest_open_time > 1) then
+        if tracker.ga_chest_open_time > 0 and (current_time - tracker.ga_chest_open_time > 5) then
             tracker.ga_chest_opened = true
             console.print("GA chest looting time over. Will not attempt again this session.")
         end
 
         if settings.always_open_ga_chest and not tracker.ga_chest_opened then
             console.print("Attempting to open GA chest")
-            if tracker.ga_chest_open_time == 0 or (current_time - tracker.ga_chest_open_time > 1) then
+            if tracker.ga_chest_open_time == 0 or (current_time - tracker.ga_chest_open_time > 5) then
                 local ga_chest = utils.get_chest("BSK_UniqueOpChest_GreaterAffix")
                 if ga_chest then
                     local success = open_chest(ga_chest)
