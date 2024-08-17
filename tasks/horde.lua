@@ -2,6 +2,7 @@ local utils      = require "core.utils"
 local enums      = require "data.enums"
 local settings   = require "core.settings"
 local navigation = require "core.navigation"
+local tracker    = require "core.tracker"
 
 local bomber = {
     enabled = false,
@@ -277,9 +278,11 @@ function bomber:main_pulse()
 
     local locked_door = bomber:get_locked_door()
     if locked_door then
+        if tracker.finished_chest_looting then
+            tracker.reset_chest_trackers()
+            console.print("Restaured Trackers")
+        end
         console.print("Locked door found")
-        tracker.reset_chest_trackers()
-        console.print("Restaured Trackers")
         if utils.distance_to(locked_door) > 2 then
             console.print("Locked door is far, moving to locked door")
             bomber:bomb_to(locked_door:get_position())
