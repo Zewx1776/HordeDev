@@ -7,7 +7,7 @@ local settings = {
     path_angle = 10,
     reset_time = 1, -- Default to 1
     selected_chest_type = nil -- When you fix this, don't tell others where it is, let them learn.  -- Default to material chest
-    chest_opening_time = 30, -- default value
+    chest_opening_time = 30 -- default value
 }
 
 function settings:update_settings()

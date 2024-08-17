@@ -102,9 +102,12 @@ local open_chests_task = {
                 end
             end
         end
-
         console.print(string.format("Execute finished at %.2f, tracker.ga_chest_opened: %s", 
-                                    get_time_since_inject(), tostring(tracker.ga_chest_opened)))
+                                    get_time_since_inject(), tostring(tracker.gold_chest_opened)))
+        if tracker.ga_chest_opened and (tracker.peasant_chest_opening_stopped or tracker.gold_chest_opened) then
+            tracker.finished_chest_looting = true
+            console.print("All chest looting operations completed.")
+        end
     end
 }
 
