@@ -1,12 +1,12 @@
 local tracker = {
     finished_time = 0,
     pit_start_time = 0,
-    open_chest_time = 0,
+    ga_chest_open_time = 0,
     ga_chest_opened = false,
-    chest_opening_stopped = false,
-    retry_attempts = 0,
-    max_retry_attempts = 5,
-    retry_delay = 1 -- 1 second delay between retries
+    peasant_chest_open_time = 0,
+    peasant_chest_opening_stopped = false,
+    gold_chest_open_time = 0,
+    gold_chest_opened = false
 }
 
 function tracker.check_time(key, delay)
