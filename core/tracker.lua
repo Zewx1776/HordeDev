@@ -6,7 +6,8 @@ local tracker = {
     chest_opening_stopped = false,
     retry_attempts = 0,
     max_retry_attempts = 5,
-    retry_delay = 1 -- 1 second delay between retries
+    retry_delay = 1, -- 1 second delay between retries
+    chest_retry_time = 0
 }
 
 function tracker.check_time(key, delay)

@@ -5,6 +5,7 @@ local tracker = require "core.tracker"
 
 local open_chests_task = {
     name = "Open Chests",
+    
     shouldExecute = function()
         return utils.player_in_zone("S05_BSK_Prototype02") and utils.player_on_quest(2023962)
     end,
@@ -13,8 +14,8 @@ local open_chests_task = {
         local current_time = get_time_since_inject()
         console.print(string.format("Execute called at %.2f, tracker.open_chest_time: %.2f, tracker.ga_chest_opened: %s", 
                                     current_time, tracker.open_chest_time or 0, tostring(tracker.ga_chest_opened)))
-        console.print(string.format("Current settings: always_open_ga_chest: %s, selected_chest_type: %s", 
-                                    tostring(settings.always_open_ga_chest), tostring(settings.selected_chest_type)))
+        console.print(string.format("Current settings: always_open_ga_chest: %s, selected_chest_type: %s, chest_opening_time: %d", 
+                                    tostring(settings.always_open_ga_chest), tostring(settings.selected_chest_type), settings.chest_opening_time))
 
         local function open_chest(chest)
             if chest then
@@ -31,7 +32,7 @@ local open_chests_task = {
             return false
         end
 
-        -- Check if 10 seconds have passed since opening the chest
+        -- Check if 10 seconds have passed since opening the GA chest
         if tracker.open_chest_time > 0 and (current_time - tracker.open_chest_time > 10) then
             tracker.ga_chest_opened = true
             console.print("GA chest looting time over. Will not attempt again this session.")
@@ -62,21 +63,25 @@ local open_chests_task = {
             local chest_type_map = {"GEAR", "MATERIALS", "GOLD"}
             local selected_chest_type = chest_type_map[settings.selected_chest_type + 1]
             local chest_id = enums.chest_types[selected_chest_type]
-            console.print(string.format("Attempting to open selected chest type: %s (ID: %s)", selected_chest_type, chest_id))
             local selected_chest = utils.get_chest(chest_id)
             if selected_chest then
-                if tracker.retry_attempts < tracker.max_retry_attempts then
-                    if tracker.check_time("chest_retry_time", tracker.retry_delay) then
+                if tracker.open_chest_time == 0 then
+                    tracker.open_chest_time = current_time
+                end
+
+                if current_time - tracker.open_chest_time <= settings.chest_opening_time then
+                    if tracker.check_time("chest_opening_stopped", 1) then
                         local success = open_chest(selected_chest)
+                        console.print(string.format("Attempting to open selected chest type: %s (ID: %s)", selected_chest_type, chest_id))
                         if success then
-                            tracker.retry_attempts = 0 -- Reset retry attempts on success
+                            console.print("Selected chest opened successfully.")
                         else
-                            console.print("Failed to open chest. Retrying...")
-                            tracker.retry_attempts = tracker.retry_attempts + 1
+                            console.print("Failed to open selected chest.")
                         end
                     end
                 else
-                    console.print("Max retry attempts reached. Giving up on opening the chest.")
+                    console.print("Chest opening time exceeded. Stopping attempts.")
+                    tracker.chest_opening_stopped = true
                 end
             else
                 console.print("Selected chest not found")
