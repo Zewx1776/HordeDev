@@ -256,4 +256,15 @@ function utils.get_chest(chest_type)
     return nil
 end
 
+function utils.get_stash()
+    local actors = actors_manager:get_all_actors()
+    for _, actor in pairs(actors) do
+        local name = actor:get_skin_name()
+        if name == "Stash" then
+            return actor
+        end
+    end
+    return nil
+end
+
 return utils

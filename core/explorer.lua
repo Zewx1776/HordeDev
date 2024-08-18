@@ -85,7 +85,7 @@ local max_target_distance = 120 -- Maximum distance for a new target
 local target_distance_states = {120, 40, 20, 5}
 local target_distance_index = 1
 local unstuck_target_distance = 15 -- Maximum distance for an unstuck target
-local stuck_threshold = 4      -- Seconds before the character is considered "stuck"
+local stuck_threshold = 10      -- Seconds before the character is considered "stuck"
 local last_position = nil
 local last_move_time = 0
 local last_explored_targets = {}
@@ -418,6 +418,9 @@ local function find_unstuck_target()
 
     return nil
 end
+
+explorer.find_unstuck_target = find_unstuck_target
+
 
 local function find_target(include_explored)
     console.print("Finding target.")

@@ -15,13 +15,29 @@ local horde_center_position    = vec3:new(9.204102, 8.915039, 0.000000)
 local horde_boss_room_position = vec3:new(-36.17675, -36.3222, 2.200)
 
 local circle_data              = {
-    radius = 2,
+    radius = 12,
     steps = 6,
     delay = 0.01,
     current_step = 1,
     last_action_time = 0,
     height_offset = 1 -- Add this for vertical movement
 }
+
+function bomber:check_and_handle_stuck()
+    if explorer.check_if_stuck() then
+        console.print("Player is stuck. Finding unstuck target.")
+        local unstuck_target = horde_center_position
+        if unstuck_target then
+            console.print("Unstuck target found. Moving to new position.")
+            pathfinder.force_move_raw(unstuck_target)
+            return true
+        else
+            console.print("No unstuck target found. Resetting exploration.")
+            return true
+        end
+    end
+    return false
+end
 
 function bomber:all_waves_cleared()
     local actors = actors_manager:get_all_actors()
@@ -88,11 +104,23 @@ function bomber:use_all_spells()
     end
 end
 
+local last_move_time = 0
+local move_timeout = 5  -- 5 seconds timeout
+
 function bomber:bomb_to(pos)
-    --pathfinder.force_move_raw(pos)
+    local current_time = os.time()
+    if current_time - last_move_time > move_timeout then
+        console.print("Move timeout reached. Clearing path and target.")
+        --explorer:clear_path_and_target()
+        last_move_time = current_time
+    end
+    
     explorer:set_custom_target(pos)
     explorer:move_to_target()
+    
+    last_move_time = current_time
 end
+
 
 function bomber:get_target()
     local spire = nil
@@ -251,6 +279,10 @@ function bomber:main_pulse()
         revive_at_checkpoint()
     end
 
+    if bomber:check_and_handle_stuck() then
+        return
+    end
+
     local world_name = get_current_world():get_name()
     console.print("Current world name: " .. world_name)
     
@@ -269,7 +301,10 @@ function bomber:main_pulse()
             console.print("Getting Pylons")
             if utils.distance_to(pylon) > 2 then
                 console.print("Pylon is far, moving to pylon")
-                bomber:bomb_to(pylon:get_position())
+                --bomber:bomb_to(pylon:get_position())
+                explorer:clear_path_and_target()
+                pathfinder.force_move_raw(pylon:get_position())
+
             else
                 console.print("Pylon is close, interacting with pylon")
                 interact_object(pylon)
