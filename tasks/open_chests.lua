@@ -6,7 +6,7 @@ local tracker = require "core.tracker"
 local open_chests_task = {
     name = "Open Chests",
     shouldExecute = function()
-        return utils.player_in_zone("S05_BSK_Prototype02") and utils.player_on_quest(2023962)
+        return utils.player_in_zone("S05_BSK_Prototype02") and utils.get_stash() ~= nil
     end,
     
     Execute = function()
