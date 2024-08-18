@@ -95,6 +95,17 @@ function utils.get_pit_portal()
     end
 end
 
+
+function utils.get_town_portal()
+    local actors = actors_manager:get_all_actors()
+    for _, actor in pairs(actors) do
+        local name = actor:get_skin_name()
+        if name == enums.misc.portal then
+           return actor
+        end
+    end
+end
+
 function utils.get_obelisk()
     local actors = actors_manager:get_all_actors()
     for _, actor in pairs(actors) do
@@ -109,18 +120,6 @@ function utils.loot_on_floor()
     return loot_manager.any_item_around(get_player_position(), 30, true, true)
 end
 
-function utils.get_start_location_0()
-    local actors = actors_manager:get_all_actors()
-    for _, actor in pairs(actors) do
-        local name = actor:get_skin_name()
-        if name == enums.misc.start_location_0 or name == enums.misc.start_location then
-            console.print("Start location found: " .. name)
-            return actor
-        end
-    end
-    --console.print("No start location found")
-    return nil
-end
 
 function utils.get_blacksmith()
     local actors = actors_manager:get_all_actors()
@@ -131,7 +130,7 @@ function utils.get_blacksmith()
             return actor
         end
     end
-    --console.print("No start location found")
+    --console.print("No blacksmith found")
     return nil
 end
 
@@ -145,7 +144,7 @@ function utils.get_jeweler()
             return actor
         end
     end
-    --console.print("No start location found")
+    --console.print("No jeweler found")
     return nil
 end
 

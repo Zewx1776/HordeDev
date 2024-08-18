@@ -47,7 +47,7 @@ function task_manager.get_current_task()
     return current_task or { name = "Idle" }
 end
 
-local task_files = { "open_chests" , "horde" }
+local task_files = { "town_salvage" , "open_chests" , "horde" }
 for _, file in ipairs(task_files) do
     local task = require("tasks." .. file)
     task_manager.register_task(task)

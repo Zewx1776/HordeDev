@@ -7,7 +7,9 @@ local tracker = {
     peasant_chest_opening_stopped = false,
     gold_chest_open_time = 0,
     gold_chest_opened = false,
-    finished_chest_looting = false
+    finished_chest_looting = false,
+    has_salvaged = false,
+    has_entered = false
 }
 
 function tracker.reset_chest_trackers()
