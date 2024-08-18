@@ -3,6 +3,7 @@ local enums      = require "data.enums"
 local settings   = require "core.settings"
 local navigation = require "core.navigation"
 local tracker    = require "core.tracker"
+local explorer   = require "core.explorer"
 
 local bomber = {
     enabled = false,
@@ -88,7 +89,9 @@ function bomber:use_all_spells()
 end
 
 function bomber:bomb_to(pos)
-    pathfinder.force_move_raw(pos)
+    --pathfinder.force_move_raw(pos)
+    explorer:set_custom_target(pos)
+    explorer:move_to_target()
 end
 
 function bomber:get_target()

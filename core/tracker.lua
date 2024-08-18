@@ -9,6 +9,7 @@ local tracker = {
     gold_chest_opened = false,
     finished_chest_looting = false,
     has_salvaged = false,
+    exit_horde_start_time = nil,
     has_entered = false
 }
 

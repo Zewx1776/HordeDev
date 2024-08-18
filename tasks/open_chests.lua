@@ -104,9 +104,18 @@ local open_chests_task = {
         end
         console.print(string.format("Execute finished at %.2f, tracker.ga_chest_opened: %s", 
                                     get_time_since_inject(), tostring(tracker.gold_chest_opened)))
+        
+        -- New code for 5-second cooldown before setting finished_chest_looting
         if tracker.ga_chest_opened and (tracker.peasant_chest_opening_stopped or tracker.gold_chest_opened) then
-            tracker.finished_chest_looting = true
-            console.print("All chest looting operations completed.")
+            if not tracker.finished_looting_start_time then
+                tracker.finished_looting_start_time = current_time
+                console.print(string.format("All chests opened. Starting 5-second cooldown at %.2f", tracker.finished_looting_start_time))
+            elseif current_time - tracker.finished_looting_start_time > 15 then
+                tracker.finished_chest_looting = true
+                console.print(string.format("5-second cooldown completed. All chest looting operations finished at %.2f", current_time))
+            else
+                console.print(string.format("Waiting for 5-second cooldown. Time elapsed: %.2f", current_time - tracker.finished_looting_start_time))
+            end
         end
     end
 }
