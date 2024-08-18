@@ -88,7 +88,7 @@ function bomber:use_all_spells()
 end
 
 function bomber:bomb_to(pos)
-   pathfinder.request_move(pos)
+    pathfinder.force_move_raw(pos)
 end
 
 function bomber:get_target()
