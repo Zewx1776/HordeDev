@@ -75,7 +75,6 @@ local tracker = require "core.tracker"
 local explorer = {
     enabled = false,
     is_task_running = false, --added to prevent boss dead pathing 
-    start_location_reached = false  -- New flag
 }
 local explored_areas = {}
 local target_position = nil
@@ -143,37 +142,7 @@ local function calculate_distance(point1, point2)
     return point1:dist_to_ignore_z(point2)
 end
 
---ai fix for start location spamming 
-function explorer:check_start_location_reached()
-    if not self.start_location_reached then
-        local start_location = utils.get_start_location_0()
-        if start_location then
-            local player_pos = get_player_position()
-            local start_pos = start_location:get_position()
-            if calculate_distance(player_pos, start_pos) < 2 then  -- Adjust this distance as needed
-                self.start_location_reached = true
-                console.print("Start location reached")
-            end
-        end
-    end
-end
 
---ai fix for boss room
---function explorer:set_start_location_target()
---    if self.is_task_running or self.current_task == "Kill Monsters" or self.start_location_reached then
---        console.print("Task is running, Kill Monsters task is active, or start location already reached. Skipping set_start_location_target")
---        return false
---    end
-
---    local start_location = utils.get_start_location_0()
---    if start_location then
---        console.print("Setting target to start location: " .. start_location:get_skin_name())
---        self:set_custom_target(start_location)
---        return true
---    else
---        return false
---    end
---end
 
 --ai fix for stairs
 local function set_height_of_valid_position(point)
@@ -776,17 +745,6 @@ on_update(function()
             if local_player and local_player:is_dead() then
                 revive_at_checkpoint()
             end
-        end
-    end
-
-    if current_core_time - last_call_time > 0.15 then
-        explorer:check_start_location_reached()
-
-        if not explorer.start_location_reached and explorer:set_start_location_target() then
-            explorer:move_to_target()
-        else
-            -- Regular exploration logic
-            explorer:move_to_target()
         end
     end
 
