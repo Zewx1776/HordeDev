@@ -25,7 +25,7 @@ local exit_horde_task = {
             tracker.finished_chest_looting = false
             -- Reset the exit_horde_start_time
             tracker.exit_horde_start_time = nil
-            tracker.reset_chest_trackers()
+            tracker.reset_dg_status()
         else
             console.print(string.format("Waiting to exit Horde. Time remaining: %.2f seconds", 10 - (current_time - tracker.exit_horde_start_time)))
         end
