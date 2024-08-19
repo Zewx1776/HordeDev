@@ -168,12 +168,14 @@ function bomber:get_target()
 end
 
 local pylons = {
+    "MeteoricHellborne",       -- Hellfire now spawns Hellborne, +1 Aether
     "SkulkingHellborne",       -- Hellborne Hunting You, Hellborne +1 Aether
     "SurgingHellborne",        -- +1 Hellborne when Spawned, Hellborne Grant +1 Aether
     "EmpoweredHellborne",      -- Hellborne +25% Damage, Hellborne grant +1 Aether
     "BlisteringHordes",        -- Normal Monster Spawn Aether Events 50% Faster
     "InfernalLords",           -- Aether Lords Now Spawn, they grant +3 Aether
     "SurgingElites",           -- Chance for Elite Doubled, Aether Fiends grant +1 Aether
+    "RagingHellfire",          -- Hellfire rains upon you, at the end of each wave spawn 1-3 Aether
     "InfernalStalker",         -- An Infernal demon has your scent, Slay it to gain +25 Aether
     "ThrivingMasses",          -- Masses deal unavoidable damage, Wave start, spawn an Aetheric Mass
     "GestatingMasses",         -- Masses spawn an Aether lord on Death, Aether Lords Grant +3 Aether
@@ -191,7 +193,6 @@ local pylons = {
     "AetherRush",              -- Normal Monsters Damage +25%, Gathering Aether Increases Movement Speed
     "EnergizingMasses",        -- Slaying Aetheric Masses slow you, While slowed this way, you have UNLIMITED RESOURCES
     "GreedySpires",            -- Soulspire requires 2x kills, Soulspires grant 2x Aether
-    "RagingHellfire",          -- Hellfire rains upon you, at the end of each wave spawn 1-3 Aether
 }
 
 function bomber:get_pylons()
