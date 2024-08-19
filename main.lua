@@ -3,6 +3,7 @@
 local gui          = require "gui"
 local task_manager = require "core.task_manager"
 local settings     = require "core.settings"
+local meteor       = require "Meteor"
 
 local local_player, player_position
 
@@ -30,6 +31,7 @@ end
 
 on_update(function()
     update_locals()
+    meteor.initialize()
     main_pulse()
 end)
 
