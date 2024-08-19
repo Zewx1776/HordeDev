@@ -45,7 +45,7 @@ function task_manager.get_current_task()
     return current_task
 end
 
-local task_files = { "town_salvage" , "exit_horde" , "open_chests" , "horde" }
+local task_files = { "town_salvage" , "exit_horde" , "open_chests" , "horde", "start_dungeon", "enter_horde" }
 for _, file in ipairs(task_files) do
     local task = require("tasks." .. file)
     task_manager.register_task(task)

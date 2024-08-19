@@ -82,7 +82,7 @@ function utils.get_closest_enemy()
     return closest_elite or (not elite_only and closest_normal) or nil
 end
 
-function utils.get_pit_portal()
+function utils.get_horde_portal()
     local actors = actors_manager:get_all_actors()
     for _, actor in pairs(actors) do
         local name = actor:get_skin_name()

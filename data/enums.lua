@@ -4,9 +4,7 @@ local enums = {
         pit_started = 1922713
     },
     portal_names = {
-        guardians_lair = "EGD_MSWK_World_PortalToFinalEncounter",
-        demise = "EGD_MSWK_World_PortalTileSetTravel",
-        pit_portal = "EGD_MSWK_World_Portal_01"
+        horde_portal = "legendary_generic_114"
     },
     misc = {
         obelisk = "TWN_Kehj_IronWolves_PitKey_Crafter",
