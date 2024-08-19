@@ -39,7 +39,7 @@ local start_dungeon_task = {
     end,
     Execute = function()
         local current_time = get_time_since_inject()
-        if current_time - stop_oh_yeah_wait_a_minute_mr_postman > 5 then
+        if current_time - stop_oh_yeah_wait_a_minute_mr_postman > 30 then
             console.print("Waiting period elapsed. Attempting to use Dungeon Sigil.")
             use_dungeon_sigil()
             stop_oh_yeah_wait_a_minute_mr_postman = current_time
