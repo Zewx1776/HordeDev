@@ -25,6 +25,10 @@ function tracker.reset_chest_trackers()
     tracker.finished_chest_looting = false
 end
 
+function tracker.reset_dg_status()
+    tracker.horde_opened = false
+end
+
 function tracker.check_time(key, delay)
     local current_time = get_time_since_inject()
     if not tracker[key] or current_time - tracker[key] >= delay then
