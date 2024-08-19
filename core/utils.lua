@@ -88,13 +88,12 @@ function utils.get_horde_portal()
         local name = actor:get_skin_name()
         local distance = utils.distance_to(actor)
         if distance < 100 then
-            if name == enums.portal_names.demise or name == enums.portal_names.guardians_lair or name == enums.portal_names.pit_portal then
+            if name == enums.portal_names.horde_portal then
                 return actor
             end
         end
     end
 end
-
 
 function utils.get_town_portal()
     local actors = actors_manager:get_all_actors()
@@ -254,6 +253,22 @@ function utils.get_chest(chest_type)
         end
     end
     return nil
+end
+
+function utils.get_consumable_info(item)
+    if not item then
+        console.print("Error: Item is nil")
+        return nil
+    end
+    local info = {}
+    -- Helper function to safely get item properties
+    local function safe_get(func, default)
+        local success, result = pcall(func)
+        return success and result or default
+    end
+    -- Get the item properties
+    info.name = safe_get(function() return item:get_name() end, "Unknown")
+    return info
 end
 
 return utils
