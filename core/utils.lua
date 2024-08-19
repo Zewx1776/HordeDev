@@ -266,4 +266,20 @@ function utils.get_stash()
     return nil
 end
 
+function utils.get_consumable_info(item)
+    if not item then
+        console.print("Error: Item is nil")
+        return nil
+    end
+    local info = {}
+    -- Helper function to safely get item properties
+    local function safe_get(func, default)
+        local success, result = pcall(func)
+        return success and result or default
+    end
+    -- Get the item properties
+    info.name = safe_get(function() return item:get_name() end, "Unknown")
+    return info
+end
+
 return utils

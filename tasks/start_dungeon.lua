@@ -2,6 +2,8 @@ local utils = require "core.utils"
 local enums = require "data.enums"
 local tracker = require "core.tracker"
 
+local stop_oh_yeah_wait_a_minute_mr_postman = get_time_since_inject()
+
 local function use_dungeon_sigil()
     if tracker.horde_opened then
         console.print("Horde already opened this session. Skipping.")
@@ -36,7 +38,14 @@ local start_dungeon_task = {
         return not utils.player_in_zone("S05_BSK_Prototype02") and not tracker.horde_opened and (tracker.finished_chest_looting or not tracker.first_run)
     end,
     Execute = function()
-        use_dungeon_sigil()
+        local current_time = get_time_since_inject()
+        if current_time - stop_oh_yeah_wait_a_minute_mr_postman > 5 then
+            console.print("Waiting period elapsed. Attempting to use Dungeon Sigil.")
+            use_dungeon_sigil()
+            stop_oh_yeah_wait_a_minute_mr_postman = current_time
+        else
+            console.print(string.format("Waiting before using Dungeon Sigil... %.2f seconds remaining.", 5 - (current_time - stop_oh_yeah_wait_a_minute_mr_postman)))
+        end
     end
 }
 
