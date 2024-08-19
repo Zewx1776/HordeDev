@@ -14,12 +14,13 @@ local exit_horde_task = {
 
         if not tracker.exit_horde_start_time then
             tracker.exit_horde_start_time = current_time
+            reset_all_dungeons()
             console.print("Starting 10-second timer before exiting Horde")
         end
 
         if current_time - tracker.exit_horde_start_time >= 10 then
             console.print("10-second timer completed. Resetting all dungeons")
-            reset_all_dungeons()
+            --reset_all_dungeons()
             -- After resetting, set finished_chest_looting back to false
             tracker.finished_chest_looting = false
             -- Reset the exit_horde_start_time

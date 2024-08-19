@@ -82,19 +82,18 @@ function utils.get_closest_enemy()
     return closest_elite or (not elite_only and closest_normal) or nil
 end
 
-function utils.get_pit_portal()
+function utils.get_horde_portal()
     local actors = actors_manager:get_all_actors()
     for _, actor in pairs(actors) do
         local name = actor:get_skin_name()
         local distance = utils.distance_to(actor)
         if distance < 100 then
-            if name == enums.portal_names.demise or name == enums.portal_names.guardians_lair or name == enums.portal_names.pit_portal then
+            if name == enums.portal_names.horde_portal then
                 return actor
             end
         end
     end
 end
-
 
 function utils.get_town_portal()
     local actors = actors_manager:get_all_actors()
@@ -250,6 +249,17 @@ function utils.get_chest(chest_type)
     for _, actor in pairs(actors) do
         local name = actor:get_skin_name()
         if name == chest_type then
+            return actor
+        end
+    end
+    return nil
+end
+
+function utils.get_stash()
+    local actors = actors_manager:get_all_actors()
+    for _, actor in pairs(actors) do
+        local name = actor:get_skin_name()
+        if name == "Stash" then
             return actor
         end
     end
