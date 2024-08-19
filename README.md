@@ -1,11 +1,3 @@
-# Change Log
-Latest version 8/18: fixed stuck bugs at door
-fixed circling in boss room due to quest ID bug
-
-broke peasant chest, immediately exits. 
-
-
-
 # Infernal Horde - Dev Edition
 
 **`THIS IS A DEVELOPMENT RELEASE`**
