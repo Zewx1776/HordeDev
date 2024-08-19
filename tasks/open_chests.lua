@@ -3,6 +3,17 @@ local settings = require "core.settings"
 local enums = require "data.enums"
 local tracker = require "core.tracker"
 
+local function get_aether_bomb()
+    local actors = actors_manager:get_all_actors()
+    for _, actor in pairs(actors) do
+        local name = actor:get_skin_name()
+        if name == "BurningAether" or name == "S05_Reputation_Experience_PowerUp_Actor" then
+            return actor
+        end
+    end
+    return nil
+end
+
 local open_chests_task = {
     name = "Open Chests",
     shouldExecute = function()
@@ -15,6 +26,18 @@ local open_chests_task = {
                                     current_time, tracker.ga_chest_open_time or 0, tostring(tracker.ga_chest_opened)))
         console.print(string.format("Current settings: always_open_ga_chest: %s, selected_chest_type: %s, chest_opening_time: %d", 
                                     tostring(settings.always_open_ga_chest), tostring(settings.selected_chest_type), settings.chest_opening_time))
+
+        -- Add this block at the beginning of the Execute function
+        local aether_bomb = get_aether_bomb()
+        if aether_bomb then
+            console.print("Aether bomb found, moving to collect it")
+            if utils.distance_to(aether_bomb) > 2 then
+                pathfinder.request_move(aether_bomb:get_position())
+            else
+                interact_object(aether_bomb)
+            end
+            return  -- Exit the function after collecting the aether bomb
+        end
 
         local function open_chest(chest)
             if chest then
