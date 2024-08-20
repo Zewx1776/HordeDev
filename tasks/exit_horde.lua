@@ -6,7 +6,7 @@ local tracker = require "core.tracker"
 local exit_horde_task = {
     name = "Exit Horde",
     shouldExecute = function()
-        return utils.player_in_zone("S05_BSK_Prototype02") and utils.player_on_quest(2023962) and tracker.gold_chest_opened == true and tracker.exit_horde_completed
+        return utils.player_in_zone("S05_BSK_Prototype02") and utils.player_on_quest(2023962) and tracker.gold_chest_opened == true
     end,
     
     Execute = function()
@@ -23,7 +23,6 @@ local exit_horde_task = {
             console.print("10-second timer completed. Resetting all dungeons")
             reset_all_dungeons()
             tracker.exit_horde_start_time = nil
-            tracker.exit_horde_completed = true  -- Neue Zeile
             tracker.exit_horde_completion_time = current_time  -- Neue Zeile
             tracker.horde_opened = false
             tracker.gold_chest_opened = false

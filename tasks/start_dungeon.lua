@@ -35,10 +35,8 @@ end
 local start_dungeon_task = {
     name = "Start Dungeon",
     shouldExecute = function()
-        return not utils.player_in_zone("S05_BSK_Prototype02") 
-            and not tracker.horde_opened 
-            and (tracker.gold_chest_opened or not tracker.first_run)
-            and tracker.exit_horde_completed  -- Neue Bedingung        
+        return utils.player_in_zone("Kehj_Caldeum") 
+            and not tracker.horde_opened         
     end,
 
     Execute = function()
