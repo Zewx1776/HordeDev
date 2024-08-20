@@ -9,10 +9,13 @@ local tracker = {
     gold_chest_opened = false,
     finished_chest_looting = false,
     has_salvaged = false,
-    exit_horde_start_time = nil,
+    exit_horde_start_time = 0,
     has_entered = false,
+    start_dungeon_time = nil,
     horde_opened = false,
-    first_run = false
+    first_run = false,
+    exit_horde_completion_time = 0,
+    exit_horde_completed = true
 }
 
 function tracker.reset_chest_trackers()
@@ -25,9 +28,6 @@ function tracker.reset_chest_trackers()
     tracker.finished_chest_looting = false
 end
 
-function tracker.reset_dg_status()
-    tracker.horde_opened = false
-end
 
 function tracker.check_time(key, delay)
     local current_time = get_time_since_inject()
