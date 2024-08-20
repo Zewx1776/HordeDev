@@ -1,4 +1,3 @@
-
 local utils = require "core.utils"
 local enums = require "data.enums"
 local tracker = require "core.tracker"
@@ -53,14 +52,15 @@ local start_dungeon_task = {
     Execute = function()
         local current_time = get_time_since_inject()
         if not tracker.start_dungeon_time then
-           console.print("Stay a while and listen")
-           tracker.start_dungeon_time = current_time
+            console.print("Stay a while and listen")
+            tracker.start_dungeon_time = current_time
         end
 
         local elapsed_time = current_time - tracker.start_dungeon_time
         if elapsed_time >= 15 then
-           console.print("Time to farm! Attempting to use Dungeon Sigil")
-           use_dungeon_sigil()
+            console.print("Time to farm! Attempting to use Dungeon Sigil")
+            reset_chest_flags() -- Reset chest flags at the start of the dungeon
+            use_dungeon_sigil()
         else
             console.print(string.format("Waiting before using Dungeon Sigil... %.2f seconds remaining.", 10 - elapsed_time))
         end
