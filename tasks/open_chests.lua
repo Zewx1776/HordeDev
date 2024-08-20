@@ -17,7 +17,7 @@ end
 local open_chests_task = {
     name = "Open Chests",
     shouldExecute = function()
-        return utils.player_in_zone("S05_BSK_Prototype02") and utils.get_stash() ~= nil
+        return utils.player_in_zone("S05_BSK_Prototype02") and utils.get_stash() ~= nil and not tracker.finished_chest_looting
     end,
     
     Execute = function()
@@ -144,3 +144,12 @@ local open_chests_task = {
 }
 
 return open_chests_task
+
+
+
+
+
+
+
+
+

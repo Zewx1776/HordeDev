@@ -24,6 +24,7 @@ local task = {
 
         local success, error = pcall(function()
             if not utils.player_in_zone("Scos_Cerrigar") and get_local_player():get_item_count() >= 1 then
+                explorer:clear_path_and_target()
                 teleport_to_waypoint(waypoints_enum.CERRIGAR)
                 return true  -- Exit the function and wait for next tick
             end
