@@ -15,8 +15,8 @@ local horde_center_position    = vec3:new(9.204102, 8.915039, 0.000000)
 local horde_boss_room_position = vec3:new(-36.17675, -36.3222, 2.200)
 
 local circle_data              = {
-    radius = 12,
-    steps = 6,
+    radius = 14,
+    steps = 8,
     delay = 0.01,
     current_step = 1,
     last_action_time = 0,
@@ -39,7 +39,10 @@ function bomber:check_and_handle_stuck()
     return false
 end
 
+local wave_start_time = 0
+
 function bomber:all_waves_cleared()
+    local current_time = get_time_since_inject()
     local actors = actors_manager:get_all_actors()
     for _, actor in pairs(actors) do
         local name = actor:get_skin_name()
@@ -195,6 +198,9 @@ local pylons = {
     "InfernalStalker",         -- An Infernal demon has your scent, Slay it to gain +25 Aether
 }
 
+
+
+
 function bomber:get_pylons()
     local actors = actors_manager:get_all_actors()
     local highest_priority_actor = nil
@@ -292,6 +298,8 @@ function bomber:main_pulse()
         return
     end
 
+
+
     local pylon = bomber:get_pylons()
     if pylon then
         local aether_actor = bomber:get_aether_actor()
@@ -312,6 +320,7 @@ function bomber:main_pulse()
             end
         end
         console.print("Pylon section completed")
+        wave_start_time = 0
         return
     end
 
@@ -332,7 +341,8 @@ function bomber:main_pulse()
         console.print("Locked door section completed")
         return
     end
-
+    
+      
     local target = bomber:get_target()
     if target then
         console.print("Target found")
@@ -382,11 +392,12 @@ end
 local task = {
     name = "Infernal Horde",
     shouldExecute = function()
-        return utils.player_in_zone("S05_BSK_Prototype02") 
+        return utils.player_in_zone("S05_BSK_Prototype02")
+        and not tracker.gold_chest_opened
+        and not tracker.finished_chest_looting 
     end,
     
     Execute = function()
-        tracker.horde_opened = false
         bomber:main_pulse()
     end
 }
