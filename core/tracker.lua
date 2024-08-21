@@ -12,10 +12,12 @@ local tracker = {
     exit_horde_start_time = 0,
     has_entered = false,
     start_dungeon_time = nil,
+    gold_chest_successfully_opened = false,
     horde_opened = false,
     first_run = false,
     exit_horde_completion_time = 0,
-    exit_horde_completed = true
+    exit_horde_completed = true,
+    wave_start_time = 0
 }
 
 function tracker.reset_chest_trackers()

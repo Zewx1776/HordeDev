@@ -17,7 +17,7 @@ end
 local open_chests_task = {
     name = "Open Chests",
     shouldExecute = function()
-        return utils.player_in_zone("S05_BSK_Prototype02") and utils.get_stash() ~= nil and not tracker.gold_chest_opened
+        return utils.player_in_zone("S05_BSK_Prototype02") and utils.get_stash() ~= nil and not (tracker.gold_chest_opened and tracker.finished_chest_looting)
     end,
     
     Execute = function()
@@ -27,7 +27,6 @@ local open_chests_task = {
         console.print(string.format("Current settings: always_open_ga_chest: %s, selected_chest_type: %s, chest_opening_time: %d", 
                                     tostring(settings.always_open_ga_chest), tostring(settings.selected_chest_type), settings.chest_opening_time))
 
-        -- Add this block at the beginning of the Execute function
         local aether_bomb = get_aether_bomb()
         if aether_bomb then
             console.print("Aether bomb found, moving to collect it")
@@ -36,7 +35,7 @@ local open_chests_task = {
             else
                 interact_object(aether_bomb)
             end
-            return  -- Exit the function after collecting the aether bomb
+            return
         end
 
         local function open_chest(chest)
@@ -63,6 +62,10 @@ local open_chests_task = {
                     console.print(string.format("Attempting to open chest type: %s (ID: %s)", chest_type, chest_id))
                     if success then
                         console.print("Chest opened successfully.")
+                        if chest_type == "GOLD" then
+                            tracker.gold_chest_successfully_opened = true
+                            tracker.gold_chest_opened = true
+                        end
                     else
                         console.print("Failed to open chest.")
                     end
@@ -72,7 +75,7 @@ local open_chests_task = {
             end
         end
 
-        -- Check if 10 seconds have passed since opening the GA chest
+        -- Check if 5 seconds have passed since opening the GA chest
         if tracker.ga_chest_open_time > 0 and (current_time - tracker.ga_chest_open_time > 5) then
             tracker.ga_chest_opened = true
             console.print("GA chest looting time over. Will not attempt again this session.")
@@ -86,9 +89,7 @@ local open_chests_task = {
                     local success = open_chest(ga_chest)
                     if success then
                         tracker.ga_chest_open_time = current_time
-                        console.print(string.format("GA chest opened at %.2f. Waiting 10 seconds for looting.", tracker.ga_chest_open_time))
-                    else
-                        console.print("Failed to open GA chest")
+                        console.print(string.format("GA chest opened at %.2f. Waiting 5 seconds for looting.", tracker.ga_chest_open_time))
                     end
                 else
                     console.print("GA chest not found")
@@ -100,7 +101,7 @@ local open_chests_task = {
             local chest_type_map = {"GEAR", "MATERIALS", "GOLD"}
             local selected_chest_type = chest_type_map[settings.selected_chest_type + 1]
             if tracker.peasant_chest_open_time == 0 then
-                tracker.peasant_chest_open_time = current_time
+               tracker.peasant_chest_open_time = current_time
             end
 
             if current_time - tracker.peasant_chest_open_time <= settings.chest_opening_time then
@@ -109,15 +110,14 @@ local open_chests_task = {
                 console.print("Chest opening time exceeded. Stopping attempts.")
                 tracker.peasant_chest_opening_stopped = true
 
-                -- Check if the selected chest type isn't gold
-                if selected_chest_type ~= "GOLD" and not tracker.gold_chest_opened then
-                    console.print("Selected chest type isn't gold. Attempting to open gold chest for 5 seconds.")
+                if selected_chest_type ~= "GOLD" and not tracker.gold_chest_successfully_opened then
+                    console.print("Selected chest type isn't gold. Attempting to open gold chest for 100 seconds.")
                     if tracker.gold_chest_open_time == 0 then
-                        tracker.gold_chest_open_time = current_time
+                       tracker.gold_chest_open_time = current_time
                     end
 
-                    if current_time - tracker.gold_chest_open_time <= 5 then
-                        handle_chest_opening("GOLD")
+                    if current_time - tracker.gold_chest_open_time <= 100 then
+                       handle_chest_opening("GOLD")
                     else
                         console.print("Gold chest opening time exceeded. Stopping attempts.")
                         tracker.gold_chest_opened = true
@@ -125,15 +125,15 @@ local open_chests_task = {
                 end
             end
         end
-        console.print(string.format("Execute finished at %.2f, tracker.ga_chest_opened: %s", 
+        console.print(string.format("Execute finished at %.2f, tracker.gold_chest_opened: %s", 
                                     get_time_since_inject(), tostring(tracker.gold_chest_opened)))
         
-        -- New code for 5-second cooldown before setting finished_chest_looting
-        if tracker.ga_chest_opened and (tracker.peasant_chest_opening_stopped or tracker.gold_chest_opened) then
+        -- 5-second cooldown before setting finished_chest_looting
+        if tracker.ga_chest_opened and (tracker.peasant_chest_opening_stopped or tracker.gold_chest_successfully_opened) then
             if not tracker.finished_looting_start_time then
                 tracker.finished_looting_start_time = current_time
                 console.print(string.format("All chests opened. Starting 5-second cooldown at %.2f", tracker.finished_looting_start_time))
-            elseif current_time - tracker.finished_looting_start_time > 15 then
+            elseif current_time - tracker.finished_looting_start_time > 5 then
                 tracker.finished_chest_looting = true
                 console.print(string.format("5-second cooldown completed. All chest looting operations finished at %.2f", current_time))
             else
@@ -144,12 +144,3 @@ local open_chests_task = {
 }
 
 return open_chests_task
-
-
-
-
-
-
-
-
-
