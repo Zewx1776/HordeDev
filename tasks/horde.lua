@@ -398,6 +398,7 @@ local task = {
     end,
     
     Execute = function()
+        tracker.horde_opened = false
         bomber:main_pulse()
     end
 }
