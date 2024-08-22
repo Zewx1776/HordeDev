@@ -24,18 +24,18 @@ local horde_boss_room_position = vec3:new(-36.17675, -36.3222, 2.200)
 -- List of positions to move to in a specific pattern
 local move_positions = {
     horde_center_position,
-    vec3:new(19, 3, 0.3),
+    vec3:new(19.5658, -1.5756, 0.6289),       -- From Middle to Left side 
     horde_center_position,
-    vec3:new(1, 18, 0.4),
+    vec3:new(20.17866, 17.897891, 0.24707),   -- From Middle to Down side
     horde_center_position,
-    vec3:new(15, 12, 0.8),
+    vec3:new(0.24825286, 20.6410, 0.4697),    -- From Middle to Right side
     horde_center_position,
 }
 
 local move_index = 1
 local reached_target = false
 local target_reach_time = 0
-local wait_time = 3 -- Time to wait at each position in seconds
+local wait_time = 5 -- Time to wait at each position in seconds
 
 -- Data for circular shooting pattern
 local circle_data = {
