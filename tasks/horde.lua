@@ -350,6 +350,8 @@ function bomber:main_pulse()
             console.print("Target is close, shooting in circle")
             bomber:shoot_in_circle()
         end
+        -- reset no target found time
+        tracker.no_target_found_time = 0
         console.print("Target section completed")
         return
     else
