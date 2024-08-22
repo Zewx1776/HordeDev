@@ -1,10 +1,8 @@
 # Infernal Horde - Dev Edition
 
 **`THIS IS A DEVELOPMENT RELEASE`**
-
-**`As a community script any user is welcome to join the development of this script, if you are not a dev (don't worry, I'm not a dev either the majority of this script is thanks to Neer) I HIGHLY recommend loading this repo into Greptile and using Claude to understand and help write the code, its not a magic wand though you still need to learn to comprehend the logic and the structure and the best practices. You will spend lots of time prompting, testing, deleting everything and trying again. The goal is to learn from it and eventually come up with an improvement. When you do post it in the community thread. `**
-
-**`REQUIRES ORBWALKER CLEAR TOGGLED ON AND BLOCK ORBWALKER MOVEMENT ENABLED`**
+**`There is an error in the code left purposefully, do not post in the thread about it`**
+**`As a community script any user is welcome to join the development of this script, if you are not a dev (don't worry, I'm not a dev either the majority of this script is thanks to Neer) I HIGHLY recommend loading this repo into Greptile and using Claude to understand and help write the code, its not a magic wand though you still need to learn to comprehend the logic and the structure and the best practices. You will spend lots of time prompting, testing, deleting everything and trying again. The goal is to learn from it and eventually come up with an improvement. When you do post it in the community thread. REQUIRES ORBWALKER CLEAR TOGGLED ON AND BLOCK ORBWALKER MOVEMENT ENABLED`**
 
 
 ## Overview
@@ -24,14 +22,17 @@ Current Features
 ## To-Do
 
 Below is a quick list of things that need to be added, if you would like to tackle these please post in the dev thread and let others know, build in public, and get words of encouragement from other members of the community. 
-
+- **`Implement core.explorer into horde task`**
 - **`Clean up repo and remove piteer enums, data etc.`**
-- **`Edit Repair task to tp from horde to vendor and back to horde`**
+- **`Edit open_chests task to open gold when aether < 20 and end task (Requires core functionality not in progress)`**
+- **`Create open infernal horde task (Requires core functionality in progress)`**
+- **`Create exit infernal horde task`**
+- **`Edit Town Salvage/Repair/Sell tasks to tp from horde to vendor and back to horde`**
 
 ## Known issues
 
 - Undiscovered Monsters at horde perimeter prevents script from continuing
-- Getting stuck at door when more waves are needed
+- Potential to get stuck if aether or monster is present after final wave and navigation is required from actor to boss room
 
 
 ## Directory Structure
