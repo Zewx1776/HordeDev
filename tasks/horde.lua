@@ -295,8 +295,6 @@ function bomber:main_pulse()
         return
     end
 
-
-
     local pylon = bomber:get_pylons()
     if pylon then
         local aether_actor = bomber:get_aether_actor()
@@ -341,6 +339,7 @@ function bomber:main_pulse()
     
       
     local target = bomber:get_target()
+    local current_time = get_time_since_inject()
     if target then
         console.print("Target found")
         if utils.distance_to(target) > 1.5 then
@@ -350,9 +349,9 @@ function bomber:main_pulse()
             console.print("Target is close, shooting in circle")
             bomber:shoot_in_circle()
         end
-        -- reset no target found time
+        
         tracker.no_target_found_time = 0
-        console.print("Target section completed")
+        console.print("Target section completed, reset no target found")
         return
     else
         console.print("No target found")
