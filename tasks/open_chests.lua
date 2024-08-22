@@ -1,6 +1,7 @@
 local utils = require "core.utils"
 local settings = require "core.settings"
 local enums = require "data.enums"
+local tracker = require "core.tracker"
 
 local open_chests_task = {
     name = "Open Chests",
@@ -34,7 +35,7 @@ local open_chests_task = {
                     console.print("Chest interaction result: " .. tostring(try_open_chest))
                     
                     -- Use tracker.check_time to wait for visual effects
-                    if tracker.check_time("chest_vfx_wait", 0.5) then
+                    if tracker.check_time("chest_vfx_wait", 0.2) then
                         -- Check for visual effects indicating successful chest opening
                         local actors = actors_manager:get_all_actors()
                         for _, actor in pairs(actors) do
@@ -61,15 +62,23 @@ local open_chests_task = {
             local chest = utils.get_chest(chest_id)
             
             if chest then
-                if tracker.check_time("chest_opening_time", 1) then
-                    local success = open_chest(chest)
-                    console.print(string.format("Attempting to open chest type: %s (ID: %s)", chest_type, chest_id))
-                    if success then
-                        console.print("Chest opened successfully.")
-                        return true
-                    else
-                        console.print("Failed to open chest.")
-                        return false
+                if utils.distance_to(chest) > 2 then
+                    if tracker.check_time("request_move_to_chest", 0.15) then
+                        console.print(string.format("Moving to %s chest", chest_type))
+                        pathfinder.request_move(chest:get_position())
+                    end
+                    return true
+                else
+                    if tracker.check_time("chest_opening_time", 1) then
+                        local success = open_chest(chest)
+                        console.print(string.format("Attempting to open chest type: %s (ID: %s)", chest_type, chest_id))
+                        if success then
+                            console.print("Chest opened successfully.")
+                            return true
+                        else
+                            console.print("Failed to open chest.")
+                            return false
+                        end
                     end
                 end
             else
@@ -78,24 +87,27 @@ local open_chests_task = {
             end
         end
 
-        if settings.always_open_ga_chest and utils.get_chest(enums.chest_types["GREATER_AFFIX"]) then
+        if settings.always_open_ga_chest and utils.get_chest(enums.chest_types["GREATER_AFFIX"]) == nil then
             local ga_success = handle_chest_opening("GREATER_AFFIX")
             if ga_success then
                 console.print("GA chest opened successfully")
             else
-                console.print("Failed to open GA chest")
+                console.print("Failed to open GA chest or moving towards it")
             end
+            return 
         end
 
         local chest_type_map = {"GEAR", "MATERIALS", "GOLD"}
         local selected_chest_type = chest_type_map[settings.selected_chest_type + 1]
 
         if selected_chest_type ~= "GOLD" then
-            while handle_chest_opening(selected_chest_type) do end
+            while handle_chest_opening(selected_chest_type) do 
+                tracker.check_time("wait_between_openings", 0.15) end
         else
-            while handle_chest_opening("GOLD") do end
+            while handle_chest_opening("GOLD") do 
+                tracker.check_time("wait_between_openings", 0.15) end
+        end
     end
-end
 }
 
 return open_chests_task
