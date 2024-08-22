@@ -57,12 +57,12 @@ local start_dungeon_task = {
         end
 
         local elapsed_time = current_time - tracker.start_dungeon_time
-        if elapsed_time >= 15 then
+        if elapsed_time >= 5 then
             console.print("Time to farm! Attempting to use Dungeon Sigil")
             reset_chest_flags() -- Reset chest flags at the start of the dungeon
             use_dungeon_sigil()
         else
-            console.print(string.format("Waiting before using Dungeon Sigil... %.2f seconds remaining.", 10 - elapsed_time))
+            console.print(string.format("Waiting before using Dungeon Sigil... %.2f seconds remaining.", 5 - elapsed_time))
         end
     end
 }

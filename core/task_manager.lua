@@ -32,7 +32,7 @@ function task_manager.execute_tasks()
             if task.name == "Exit Pit" or task.name == "Finish Pit" then
                 is_exit_or_finish_active = true
             end
-            task:Execute()
+            task.Execute()
             break -- Execute only one task per pulse
         end
     end
