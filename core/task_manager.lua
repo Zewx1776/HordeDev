@@ -32,7 +32,7 @@ function task_manager.execute_tasks()
             if task.name == "Exit Pit" or task.name == "Finish Pit" then
                 is_exit_or_finish_active = true
             end
-            task.Execute()
+            task:Execute()
             break -- Execute only one task per pulse
         end
     end
@@ -45,7 +45,7 @@ function task_manager.get_current_task()
     return current_task
 end
 
-local task_files = { "town_salvage" , "open_chests" , "exit_horde" ,"start_dungeon", "enter_horde", "horde",  }
+local task_files = { "town_salvage" , "open_chests" , "exit_horde" ,"start_dungeon", "enter_horde", "horde"  }
 for _, file in ipairs(task_files) do
     local task = require("tasks." .. file)
     task_manager.register_task(task)

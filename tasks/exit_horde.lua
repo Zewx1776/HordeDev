@@ -9,7 +9,7 @@ exit_horde_task = {
     
     shouldExecute = function()
         return utils.player_in_zone("S05_BSK_Prototype02")
-            and utils.get_stash() ~= nil
+            and utils.player_on_quest(2023962)
             and tracker.finished_chest_looting
             and tracker.gold_chest_successfully_opened
     end,
@@ -19,19 +19,19 @@ exit_horde_task = {
 
         if not exit_horde_task.delay_start_time then
             exit_horde_task.delay_start_time = current_time
-            console.print("Starting 10-second delay before initiating exit procedure")
+            console.print("Starting 5-second delay before initiating exit procedure")
             return
         end
 
         local delay_elapsed_time = current_time - exit_horde_task.delay_start_time
-        if delay_elapsed_time < 10 then
-            console.print(string.format("Waiting to start exit procedure. Time remaining: %.2f seconds", 10 - delay_elapsed_time))
+        if delay_elapsed_time < 5 then
+            console.print(string.format("Waiting to start exit procedure. Time remaining: %.2f seconds", 5 - delay_elapsed_time))
             return
         end
 
         if not tracker.exit_horde_start_time then
             tracker.finished_chest_looting = true
-            console.print("Starting 10-second timer before exiting Horde")
+            console.print("Starting 5-second timer before exiting Horde")
             tracker.exit_horde_start_time = current_time
         end
        
