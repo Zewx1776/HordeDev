@@ -17,7 +17,8 @@ local tracker = {
     first_run = false,
     exit_horde_completion_time = 0,
     exit_horde_completed = true,
-    wave_start_time = 0
+    wave_start_time = 0,
+    no_target_found_time = 0
 }
 
 function tracker.reset_chest_trackers()
@@ -28,6 +29,7 @@ function tracker.reset_chest_trackers()
     tracker.gold_chest_opened = false
     tracker.gold_chest_open_time = 0
     tracker.finished_chest_looting = false
+    tracker.no_target_found_time = 0
 end
 
 

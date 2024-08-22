@@ -179,27 +179,24 @@ local pylons = {
     "InvigoratingHellborne",   -- Hellborne Damage +25%, Slaying Hellborne Invigorates you
     "BlisteringHordes",        -- Normal Monster Spawn Aether Events 50% Faster
     "SurgingElites",           -- Chance for Elite Doubled, Aether Fiends grant +1 Aether
-    "ThrivingMasses",          -- Masses deal unavoidable damage, Wave start, spawn an Aetheric Mass
-    "GestatingMasses",         -- Masses spawn an Aether lord on Death, Aether Lords Grant +3 Aether
-    "EmpoweredMasses",         -- Aetheric Mass damage: +25%, Aetheric Mass grants +1 Aether
     "EmpoweredElites",         -- Elite damage +25%, Aether Fiends grant +1 Aether
+    "UnstoppableElites",       -- Elites are Unstoppable, Aether Fiends grant +1 Aether
     "IncreasedEvadeCooldown",  -- Increase Evade Cooldown +2 Sec, Council grants +15 Aether
     "IncreasedPotionCooldown", -- Increase potion cooldown +2 Sec, Council Grants +15 Aether
     "EmpoweredCouncil",        -- Fell Council +50% Damage, Council grants +15 Aether
     "ReduceAllResistance",     -- Reduce All Resist -10%, Council grants +15 Aether
+    "ThrivingMasses",          -- Masses deal unavoidable damage, Wave start, spawn an Aetheric Mass
+    "EmpoweredMasses",         -- Aetheric Mass damage: +25%, Aetheric Mass grants +1 Aether
     "DeadlySpires",            -- Soulspires Drain Health, Soulspires grant +2 Aether
-    "UnstoppableElites",       -- Elites are Unstoppable, Aether Fiends grant +1 Aether
     "CorruptingSpires",        -- Soulspires empower nearby foes, they also pull enemies inward
     "UnstableFiends",          -- Elite Damage +25%, Aether Fiends explode and damage FOES
     "AetherRush",              -- Normal Monsters Damage +25%, Gathering Aether Increases Movement Speed
     "EnergizingMasses",        -- Slaying Aetheric Masses slow you, While slowed this way, you have UNLIMITED RESOURCES
     "GreedySpires",            -- Soulspire requires 2x kills, Soulspires grant 2x Aether
+    "GestatingMasses",         -- Masses spawn an Aether lord on Death, Aether Lords Grant +3 Aether
     "InfernalLords",           -- Aether Lords Now Spawn, they grant +3 Aether
     "InfernalStalker",         -- An Infernal demon has your scent, Slay it to gain +25 Aether
 }
-
-
-
 
 function bomber:get_pylons()
     local actors = actors_manager:get_all_actors()
@@ -366,12 +363,18 @@ function bomber:main_pulse()
                 return
             end
 
-            if get_player_position():dist_to(horde_boss_room_position) > 2 then
-                console.print("Moving to horde boss room")
-                bomber:bomb_to(horde_boss_room_position)
-            else
-                console.print("At horde boss room, shooting in circle")
-                bomber:shoot_in_circle()
+            if tracker.no_target_found_time == 0 then
+                tracker.no_target_found_time = current_time
+            end
+            console.print("If no target found time > 10 go to boss room")
+            if current_time - tracker.no_target_found_time > 10 then
+                if get_player_position():dist_to(horde_boss_room_position) > 2 then
+                    console.print("Moving to horde boss room")
+                    bomber:bomb_to(horde_boss_room_position)
+                else
+                    console.print("At horde boss room, shooting in circle")
+                    bomber:shoot_in_circle()
+                end
             end
         else
             console.print("Waves not cleared, moving to horde center position")
