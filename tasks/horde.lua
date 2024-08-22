@@ -100,7 +100,7 @@ end
 
 -- Function to move in a circular pattern and shoot
 function bomber:shoot_in_circle()
-    local current_time = get_current_time()
+    local current_time = get_time_since_inject()
     if current_time - circle_data.last_action_time >= circle_data.delay then
         local player_pos = get_player_pos()
         local angle = (circle_data.current_step / circle_data.steps) * (2 * math.pi)
@@ -116,21 +116,24 @@ function bomber:shoot_in_circle()
 end
 
 local last_move_time = 0
-local move_timeout = 5
+local move_timeout = 8
 
 -- Function to move the player to a specific position and clear the path if needed
 function bomber:bomb_to(pos)
-    local current_time = get_current_time()
+    local current_time = get_time_since_inject()
     if current_time - last_move_time > move_timeout then
         console.print("Move timeout reached. Clearing path and targeting new position.")
-        explorer:set_custom_target(pos)
         explorer:clear_path_and_target()
+        explorer:set_custom_target(pos)
         last_move_time = current_time
     end
 
-    explorer:set_custom_target(pos)
-    explorer:move_to_target()
-    last_move_time = current_time
+    pathfinder.force_move_raw(pos)
+
+    if utils.distance_to(pos) < 2 then
+        last_move_time = current_time
+        console.print("Target reached.")
+    end
 end
 
 -- Function to get the current target based on various criteria
@@ -277,12 +280,12 @@ function bomber:move_in_pattern()
             bomber:bomb_to(target_position)
         else
             reached_target = true
-            target_reach_time = get_current_time()
+            target_reach_time = get_time_since_inject()
             console.print("Reached target position " .. position_to_string(target_position))
         end
     else
         -- Check if 2 seconds have passed before moving to the next position
-        if get_current_time() - target_reach_time >= wait_time then
+        if get_time_since_inject() - target_reach_time >= wait_time then
             move_index = move_index + 1
             reached_target = false
             console.print("Moving to the next position in the pattern.")
@@ -291,12 +294,12 @@ function bomber:move_in_pattern()
 end
 
 function bomber:move_to_center_and_wait()
-    local current_time = get_current_time()
+    local current_time = get_time_since_inject()
 
     -- Wenn der Charakter nicht bereits zur Mitte gelaufen ist
     if not self.center_reached then
         -- Bewege den Charakter zur Mitte des Raumes
-        self:bomb_to(horde_center_position)
+        pathfinder.force_move_raw(horde_center_position)
         if utils.distance_to(horde_center_position) <= 2 then
             -- Wenn der Charakter die Mitte erreicht hat, setze den Zeitstempel für das Warten
             self.center_reach_time = current_time
@@ -384,7 +387,7 @@ function bomber:main_pulse()
         if get_current_time() - last_enemy_check_time > enemy_check_interval then
             -- No enemies found for 3 seconds, return to the center
             console.print("No enemies detected for 3 seconds. Returning to the center.")
-            move_to_position(horde_center_position)
+            pathfinder.force_move_raw(horde_center_position)
             last_enemy_check_time = current_time
         end
 
