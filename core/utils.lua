@@ -282,4 +282,15 @@ function utils.get_consumable_info(item)
     return info
 end
 
+function utils.get_aether_actor()
+    local actors = actors_manager:get_all_actors()
+    for _, actor in pairs(actors) do
+        local name = actor:get_skin_name()
+        if name == "BurningAether" or name == "S05_Reputation_Experience_PowerUp_Actor" then
+            return actor
+        end
+    end
+    return nil
+end
+
 return utils

@@ -3,31 +3,15 @@ local settings = require "core.settings"
 local enums = require "data.enums"
 local tracker = require "core.tracker"
 
-local function get_aether_bomb()
-    local actors = actors_manager:get_all_actors()
-    for _, actor in pairs(actors) do
-        local name = actor:get_skin_name()
-        if name == "BurningAether" or name == "S05_Reputation_Experience_PowerUp_Actor" then
-            return actor
-        end
-    end
-    return nil
-end
-
 local open_chests_task = {
     name = "Open Chests",
     shouldExecute = function()
-        return utils.player_in_zone("S05_BSK_Prototype02") and utils.get_stash() ~= nil and not (tracker.gold_chest_opened and tracker.finished_chest_looting)
+        return utils.player_in_zone("S05_BSK_Prototype02") and utils.get_stash()
     end,
     
     Execute = function()
         local current_time = get_time_since_inject()
-        console.print(string.format("Execute called at %.2f, tracker.ga_chest_open_time: %.2f, tracker.ga_chest_opened: %s", 
-                                    current_time, tracker.ga_chest_open_time or 0, tostring(tracker.ga_chest_opened)))
-        console.print(string.format("Current settings: always_open_ga_chest: %s, selected_chest_type: %s, chest_opening_time: %d", 
-                                    tostring(settings.always_open_ga_chest), tostring(settings.selected_chest_type), settings.chest_opening_time))
-
-        local aether_bomb = get_aether_bomb()
+        local aether_bomb = utils.get_aether_actor()
         if aether_bomb then
             console.print("Aether bomb found, moving to collect it")
             if utils.distance_to(aether_bomb) > 2 then

@@ -268,16 +268,6 @@ function bomber:gather_buffs()
     end
 end
 
-function bomber:get_aether_actor()
-    local actors = actors_manager:get_all_actors()
-    for _, actor in pairs(actors) do
-        local name = actor:get_skin_name()
-        if name == "BurningAether" or name == "S05_Reputation_Experience_PowerUp_Actor" then
-            return actor
-        end
-    end
-end
-
 function bomber:main_pulse()
     console.print("Main pulse initiated")
 
@@ -302,7 +292,7 @@ function bomber:main_pulse()
 
     local pylon = bomber:get_pylons()
     if pylon then
-        local aether_actor = bomber:get_aether_actor()
+        local aether_actor = utils.get_aether_actor()
         if aether_actor then
             console.print("Fetching Aether")
             bomber:bomb_to(aether_actor:get_position())
@@ -359,7 +349,7 @@ function bomber:main_pulse()
         console.print("No target found")
         if bomber:all_waves_cleared() then
             console.print("All waves cleared")
-            local aether = bomber:get_aether_actor()
+            local aether = utils.get_aether_actor()
             if aether then
                 console.print("Aether Get")
                 bomber:bomb_to(aether:get_position())
