@@ -671,6 +671,35 @@ local function move_to_target()
     end
 end
 
+local function attempt_unstuck()
+    local player_pos = get_player_position()
+    local directions = {
+        {x = 1, y = 0}, {x = -1, y = 0}, {x = 0, y = 1}, {x = 0, y = -1},
+        {x = 1, y = 1}, {x = -1, y = 1}, {x = 1, y = -1}, {x = -1, y = -1}
+    }
+    
+    for _, dir in ipairs(directions) do
+        local new_pos = vec3:new(
+            player_pos:x() + dir.x * grid_size,
+            player_pos:y() + dir.y * grid_size,
+            player_pos:z()
+        )
+        new_pos = set_height_of_valid_position(new_pos)
+        
+        if utility.is_point_walkeable(new_pos) then
+            pathfinder.force_move_raw(new_pos)
+            console.print("Attempting to move to: " .. tostring(new_pos))
+            return true
+        end
+    end
+    
+    return false
+end
+
+local current_target = nil
+local target_set_time = 0
+local target_cooldown = 10 -- Sekunden
+
 local function check_if_stuck()
     --console.print("Checking if character is stuck.")
     local current_pos = get_player_position()
@@ -689,11 +718,92 @@ local function check_if_stuck()
     return false
 end
 
-explorer.check_if_stuck = check_if_stuck
+local stuck_cooldown = 0
+local stuck_cooldown_time = 5  -- 5 Sekunden Cooldown
 
-function explorer:set_custom_target(target)
-    console.print("Setting custom target.")
-    target_position = target
+local function on_update()
+    check_pit_time()
+    check_and_reset_dungeons()
+    check_walkable_area()
+
+    local current_time = get_time_since_inject()
+
+    if check_if_stuck() then
+        if current_time > stuck_cooldown then
+            console.print("Player is stuck. Attempting to unstuck.")
+            -- Versuchen Sie hier, den Spieler zu befreien (z.B. kleine Bewegungen in verschiedene Richtungen)
+            if attempt_unstuck() then
+                console.print("Unstuck attempt successful.")
+            else
+                console.print("Unstuck attempt failed. Clearing path and finding new target.")
+                explorer:clear_path_and_target()
+                target_position = find_unexplored_target()
+                if not target_position then
+                    console.print("No unexplored target found. Trying explored targets.")
+                    target_position = find_random_explored_target()
+                end
+                if target_position then
+                    console.print("Moving to new target position.")
+                    move_to_target()
+                else
+                    console.print("No valid targets found. Exiting.")
+                end
+            end
+            
+            if not target_position or calculate_distance(get_player_position(), target_position) > max_target_distance then
+                explorer:clear_path_and_target()
+                target_position = find_unexplored_target()
+                if not target_position then
+                    console.print("No unexplored target found. Trying explored targets.")
+                    target_position = find_random_explored_target()
+                end
+                if target_position then
+                    console.print("Moving to new target position.")
+                    move_to_target()
+                else
+                    console.print("No valid targets found. Exiting.")
+                end
+            else
+                console.print("Continuing to current target.")
+                move_to_target()
+            end
+            
+            stuck_cooldown = current_time + stuck_cooldown_time
+        else
+            console.print("Waiting for stuck cooldown.")
+        end
+        
+        if current_path and path_index <= #current_path then
+        local next_point = current_path[path_index]
+        local player_pos = get_player_position()
+        local distance_to_next = calculate_distance(player_pos, next_point)
+        end
+
+        if distance_to_next < 1 then
+            path_index = path_index + 1
+        else
+            pathfinder.request_move(next_point)
+        end
+
+        last_position = player_pos
+        last_move_time = current_time
+    elseif not target_position then
+        console.print("No current target. Finding new target.")
+        target_position = find_unexplored_target() or find_random_explored_target()
+        if target_position then
+            move_to_target()
+        else
+            console.print("No valid targets found. Exiting.")
+        end
+    end
+end
+
+local explorer = {}
+
+function explorer:clear_path_and_target()
+    target_position = nil
+    current_path = {}
+    path_index = 1
 end
 
 -- Expose the move_to_target function
