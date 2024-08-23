@@ -43,7 +43,6 @@ gui.elements = {
     path_angle_slider = slider_int:new(0, 360, 10, get_hash("path_angle_slider")), -- 10 is a default value
     chest_type_selector = combo_box:new(0, get_hash("chest_type_selector")),
     always_open_ga_chest = create_checkbox("always_open_ga_chest"),
-    chest_opening_time_slider = slider_int:new(1, 60, 30, get_hash("chest_opening_time_slider")) -- 30 is the default value
 }
 
 function gui.render()
@@ -57,7 +56,6 @@ function gui.render()
         gui.elements.loot_toggle:render("Enable Looting", "Toggle looting on/off")        
         gui.elements.loot_modes:render("Loot Modes", gui.loot_modes_options, "Nothing and Stash will get you stuck for now")
         gui.elements.path_angle_slider:render("Path Angle", "Adjust the angle for path filtering (0-360 degrees)")
-        gui.elements.chest_opening_time_slider:render("Chest Opening Time", "Adjust the time for opening chests (1-60 seconds)")
         
         -- Updated chest type selector to use the new enum structure
         gui.elements.chest_type_selector:render("Chest Type", gui.chest_types_options, "Select the type of chest to open")
