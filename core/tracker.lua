@@ -22,12 +22,6 @@ local tracker = {
 
 function tracker.reset_chest_trackers()
     tracker.ga_chest_opened = false
-    tracker.ga_chest_open_time = 0
-    tracker.peasant_chest_open_time = 0
-    tracker.peasant_chest_opening_stopped = false
-    tracker.gold_chest_opened = false
-    tracker.gold_chest_open_time = 0
-    tracker.finished_chest_looting = false
 end
 
 
