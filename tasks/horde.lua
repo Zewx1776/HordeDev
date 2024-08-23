@@ -19,6 +19,7 @@ local bomber = {
 
 -- Define key positions for movement and patterns
 local horde_center_position = vec3:new(9.204102, 8.915039, 0.000000)
+local unstuck_position = vec3:new(16.8066444, 12.58058, 0.000000)
 local horde_boss_room_position = vec3:new(-36.17675, -36.3222, 2.200)
 
 -- List of positions to move to in a specific pattern
@@ -260,7 +261,7 @@ function bomber:get_aether_actor()
     end
 end
 
--- Function to move in a defined pattern to specific positions
+
 -- Function to move in a defined pattern to specific positions
 function bomber:move_in_pattern()
     if move_index > #move_positions then
@@ -277,7 +278,7 @@ function bomber:move_in_pattern()
     if not reached_target then
         if utils.distance_to(target_position) > 2 then
             console.print("Moving to position " .. position_to_string(target_position))
-            bomber:bomb_to(target_position)
+            pathfinder.force_move_raw(target_position)
         else
             reached_target = true
             target_reach_time = get_time_since_inject()
