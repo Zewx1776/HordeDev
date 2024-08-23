@@ -2,6 +2,7 @@ local tracker = {
     finished_time = 0,
     pit_start_time = 0,
     ga_chest_opened = false,
+    selected_chest_opened = false,
     finished_chest_looting = false,
     has_salvaged = false,
     exit_horde_start_time = 0,
@@ -17,6 +18,7 @@ local tracker = {
 function tracker.reset_chest_trackers()
     tracker.ga_chest_opened = false
     tracker.finished_chest_looting = false
+    tracker.selected_chest_opened = false
 end
 
 

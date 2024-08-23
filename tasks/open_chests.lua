@@ -82,11 +82,12 @@ local open_chests_task = {
     end,
 
     select_chest = function(self)
+        local chest_type_map = {"GEAR", "MATERIALS", "GOLD"}
+        self.selected_chest_type = chest_type_map[settings.selected_chest_type + 1]
+    
         if settings.always_open_ga_chest and not tracker.ga_chest_opened and utils.get_chest(enums.chest_types["GREATER_AFFIX"]) then
             self.current_chest_type = "GREATER_AFFIX"
         else
-            local chest_type_map = {"GEAR", "MATERIALS", "GOLD"}
-            self.selected_chest_type = chest_type_map[settings.selected_chest_type + 1]
             self.current_chest_type = self.selected_chest_type
         end
         self.current_state = chest_state.MOVING_TO_CHEST
@@ -150,29 +151,36 @@ local open_chests_task = {
             tracker.ga_chest_opened = true
             console.print("Greater Affix chest attempts exhausted, marking as opened")
             self.current_chest_type = self.selected_chest_type
+            self.failed_attempts = 0
         elseif self.current_chest_type == self.selected_chest_type then
-            console.print("Moving to next chest type: GOLD")
-            self.current_chest_type = "GOLD"
+            if self.failed_attempts >= self.max_attempts then
+                console.print("User-selected chest type exhausted, moving to GOLD")
+                self.current_chest_type = "GOLD"
+                self.failed_attempts = 0
+            else
+                console.print("Retrying user-selected chest type")
+                -- Don't change the chest type, just reset failed attempts
+                self.failed_attempts = 0
+            end
         elseif self.current_chest_type == "GOLD" then
             console.print("All chest types exhausted, finishing task")
             self.current_state = chest_state.FINISHED
             return
         end
         
-        self.failed_attempts = 0
         self.current_state = chest_state.MOVING_TO_CHEST
     end,
 
     finish_chest_opening = function(self)
         if self.current_chest_type == "GREATER_AFFIX" then
             tracker.ga_chest_opened = true
-        end
-        if self.current_chest_type == "GOLD" then
+        elseif self.current_chest_type == self.selected_chest_type then
+            tracker.selected_chest_opened = true
+        elseif self.current_chest_type == "GOLD" then
             tracker.finished_chest_looting = true
         end
         self.current_state = chest_state.INIT
         self.current_chest_type = nil
-        self.selected_chest_type = nil
         self.failed_attempts = 0
         console.print("Chest opening task finished and reset")
         return
