@@ -21,7 +21,6 @@ local enter_horde_task = {
         return utils.player_in_zone("Kehj_Caldeum") and tracker.horde_opened
     end,
     Execute = function()
-        explorer:clear_path_and_target()
         enter_horde()
     end
 }
