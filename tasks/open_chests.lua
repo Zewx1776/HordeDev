@@ -122,7 +122,7 @@ local open_chests_task = {
             local actors = actors_manager:get_all_actors()
             for _, actor in pairs(actors) do
                 local name = actor:get_skin_name()
-                if name == "vfx_resplendentChest_coins" or name == "vfx_resplendentChest_lightRays" or name == "Hell_Prop_Chest_Rare_81_Client_Dyn" then
+                if name == "vfx_resplendentChest_coins" or name == "vfx_resplendentChest_lightRays" or name:match("g_gold") then
                     console.print("Chest opened successfully: " .. name)
                     self.current_state = chest_state.FINISHED
                     return
