@@ -77,8 +77,13 @@ local open_chests_task = {
 
     collect_aether = function(self)
         local aether_bomb = utils.get_aether_actor()
-        interact_object(aether_bomb)
-        self.current_state = chest_state.SELECTING_CHEST
+        if aether_bomb then
+            interact_object(aether_bomb)
+            self.current_state = chest_state.SELECTING_CHEST
+        else
+            console.print("No aether bomb found to collect")
+            self.current_state = chest_state.SELECTING_CHEST
+        end
     end,
 
     select_chest = function(self)
