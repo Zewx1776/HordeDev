@@ -1,18 +1,12 @@
 local tracker = {
     finished_time = 0,
     pit_start_time = 0,
-    ga_chest_open_time = 0,
     ga_chest_opened = false,
-    peasant_chest_open_time = 0,
-    peasant_chest_opening_stopped = false,
-    gold_chest_open_time = 0,
-    gold_chest_opened = false,
     finished_chest_looting = false,
     has_salvaged = false,
     exit_horde_start_time = 0,
     has_entered = false,
     start_dungeon_time = nil,
-    gold_chest_successfully_opened = false,
     horde_opened = false,
     first_run = false,
     exit_horde_completion_time = 0,
@@ -22,6 +16,7 @@ local tracker = {
 
 function tracker.reset_chest_trackers()
     tracker.ga_chest_opened = false
+    tracker.finished_chest_looting = false
 end
 
 
