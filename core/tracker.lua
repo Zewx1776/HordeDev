@@ -29,22 +29,4 @@ function tracker.check_time(key, delay)
     return false
 end
 
-local function get_consumable_info(item)
-    if not item then
-        console.print("Error: Item is nil")
-        return nil
-    end
-    local info = {}
-
-    -- Safely get display name
-    local success, display_name = pcall(function() return item:get_display_name() end)
-    info.display_name = success and display_name or "Unknown"
-
-    -- Safely get name
-    local success, name = pcall(function() return item:get_name() end)
-    info.name = success and name or "Unknown"
-    
-    return false
-end
-
 return tracker

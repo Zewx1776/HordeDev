@@ -11,7 +11,6 @@ exit_horde_task = {
         return utils.player_in_zone("S05_BSK_Prototype02")
             and utils.get_stash() ~= nil
             and tracker.finished_chest_looting
-            and tracker.gold_chest_successfully_opened
     end,
     
     Execute = function()
@@ -43,9 +42,7 @@ exit_horde_task = {
             tracker.exit_horde_completion_time = current_time
             tracker.horde_opened = false
             tracker.finished_chest_looting = false
-            tracker.gold_chest_opened = false
             tracker.start_dungeon_time = nil
-            tracker.gold_chest_successfully_opened = false
             wave_start_time = 0
             exit_horde_task.delay_start_time = nil  -- Reset the delay timer
         else
