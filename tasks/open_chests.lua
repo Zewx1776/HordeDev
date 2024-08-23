@@ -62,10 +62,16 @@ local open_chests_task = {
 
     move_to_aether = function(self)
         local aether_bomb = utils.get_aether_actor()
-        if utils.distance_to(aether_bomb) > 2 then
-            pathfinder.request_move(aether_bomb:get_position())
+        if aether_bomb then
+            if utils.distance_to(aether_bomb) > 2 then
+                pathfinder.request_move(aether_bomb:get_position())
+            else
+                self.current_state = chest_state.COLLECTING_AETHER
+            end
         else
-            self.current_state = chest_state.COLLECTING_AETHER
+            -- Handle the case when no aether bomb is found
+            console.print("No aether bomb found")
+            self.current_state = chest_state.SELECTING_CHEST
         end
     end,
 
