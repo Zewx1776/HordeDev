@@ -43,7 +43,7 @@ gui.elements = {
     path_angle_slider = slider_int:new(0, 360, 10, get_hash("path_angle_slider")), -- 10 is a default value
     chest_type_selector = combo_box:new(0, get_hash("chest_type_selector")),
     always_open_ga_chest = create_checkbox("always_open_ga_chest"),
-    chest_opening_time_slider = slider_int:new(1, 100, 30, get_hash("chest_opening_time_slider")) -- 30 is the default value
+    chest_opening_time_slider = slider_int:new(1, 600, 30, get_hash("chest_opening_time_slider")) -- 30 is the default value
 }
 
 function gui.render()
