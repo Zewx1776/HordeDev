@@ -157,19 +157,6 @@ function table.contains(tbl, item)
     return false
 end
 
-function utils.distance_to(target)
-    local player_pos = get_player_position()
-    local target_pos
-
-    if target.get_position then
-        target_pos = target:get_position()
-    elseif target.x then
-        target_pos = target
-    end
-
-    return player_pos:dist_to(target_pos)
-end
-
 ---@param identifier string|number string or number of the aura to check for
 ---@param count? number stacks of the buff to require (optional)
 function utils.player_has_aura(identifier, count)
