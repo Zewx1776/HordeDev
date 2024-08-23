@@ -157,19 +157,6 @@ function table.contains(tbl, item)
     return false
 end
 
-function utils.distance_to(target)
-    local player_pos = get_player_position()
-    local target_pos
-
-    if target.get_position then
-        target_pos = target:get_position()
-    elseif target.x then
-        target_pos = target
-    end
-
-    return player_pos:dist_to(target_pos)
-end
-
 ---@param identifier string|number string or number of the aura to check for
 ---@param count? number stacks of the buff to require (optional)
 function utils.player_has_aura(identifier, count)
@@ -280,6 +267,17 @@ function utils.get_consumable_info(item)
     -- Get the item properties
     info.name = safe_get(function() return item:get_name() end, "Unknown")
     return info
+end
+
+function utils.get_aether_actor()
+    local actors = actors_manager:get_all_actors()
+    for _, actor in pairs(actors) do
+        local name = actor:get_skin_name()
+        if name == "BurningAether" or name == "S05_Reputation_Experience_PowerUp_Actor" then
+            return actor
+        end
+    end
+    return nil
 end
 
 return utils

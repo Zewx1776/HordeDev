@@ -317,7 +317,7 @@ end
 
 
 local last_enemy_check_time = 0
-local enemy_check_interval = 3 -- Interval in seconds to check for enemies
+local enemy_check_interval = 5 -- Interval in seconds to check for enemies
 
 -- Main function to handle the bomber's actions based on the current game state
 function bomber:main_pulse()
@@ -385,8 +385,8 @@ function bomber:main_pulse()
         return
     else
         if get_current_time() - last_enemy_check_time > enemy_check_interval then
-            -- No enemies found for 3 seconds, return to the center
-            console.print("No enemies detected for 3 seconds. Returning to the center.")
+            -- No enemies found for 5 seconds, return to the center
+            console.print("No enemies detected for 5 seconds. Returning to the center.")
             pathfinder.force_move_raw(horde_center_position)
             last_enemy_check_time = current_time
         end
