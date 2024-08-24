@@ -21,7 +21,9 @@ local open_chests_task = {
     name = "Open Chests",
     current_state = chest_state.INIT,
     current_chest_type = nil,
+    current_chest_index = nil,
     failed_attempts = 0,
+    current_chest_index = nil,
     max_attempts = 3,
     state_before_pause = nil,
     
@@ -93,7 +95,7 @@ local open_chests_task = {
             self.current_state = chest_state.MOVING_TO_AETHER
             return
         end
-    
+        
         console.print("Initializing chest opening")
         console.print("settings.always_open_ga_chest: " .. tostring(settings.always_open_ga_chest))
         console.print("tracker.ga_chest_opened: " .. tostring(tracker.ga_chest_opened))
@@ -104,11 +106,11 @@ local open_chests_task = {
         self.selected_chest_type = chest_type_map[settings.selected_chest_type + 1]
     
         -- If no aether, proceed with chest selection
-        current_chest_index = 1
+        self.current_chest_index = 1
         if settings.always_open_ga_chest and not tracker.ga_chest_opened then
             self.current_chest_type = "GREATER_AFFIX"
         else
-            current_chest_index = 2  -- Skip to SELECTED
+            self.current_chest_index = 2  -- Skip to SELECTED
             self.current_chest_type = self.selected_chest_type
         end
         
@@ -219,7 +221,7 @@ local open_chests_task = {
             local actors = actors_manager:get_all_actors()
             for _, actor in pairs(actors) do
                 local name = actor:get_skin_name()
-                if name == "vfx_resplendentChest_coins" or name == "vfx_resplendentChest_lightRays" or name:match("g_gold") then
+                if name == "vfx_resplendentChest_coins" or name == "vfx_resplendentChest_lightRays" then
                     console.print("Chest opened successfully: " .. name)
                     self.failed_attempts = 0
                     self:try_next_chest(true)  -- Move to next chest type after successful opening
@@ -243,9 +245,9 @@ local open_chests_task = {
         console.print("Current self.selected_chest_type: " .. tostring(self.selected_chest_type))
     
         local function move_to_next_chest()
-            current_chest_index = current_chest_index + 1
-            if current_chest_index <= #chest_order then
-                local next_chest = chest_order[current_chest_index]
+            self.current_chest_index = (self.current_chest_index or 0) + 1
+            if self.current_chest_index <= #chest_order then
+                local next_chest = chest_order[self.current_chest_index]
                 if next_chest == "SELECTED" then
                     self.current_chest_type = self.selected_chest_type
                 else
@@ -301,6 +303,7 @@ local open_chests_task = {
         self.current_state = chest_state.INIT
         self.current_chest_type = nil
         self.failed_attempts = 0
+        self.current_chest_index = nil
         tracker.finished_chest_looting = false
         tracker.ga_chest_opened = false
         tracker.selected_chest_opened = false
