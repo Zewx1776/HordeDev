@@ -12,7 +12,7 @@ exit_horde_task = {
     shouldExecute = function()
         return utils.player_in_zone("S05_BSK_Prototype02")
             and utils.get_stash() ~= nil
-            and tracker.finished_chest_looting
+            and (tracker.finished_chest_looting or not utils.get_chest(enums.chest_types["GOLD"])) 
     end,
     
     Execute = function()
@@ -39,7 +39,6 @@ exit_horde_task = {
         if elapsed_time >= 10 then
             console.print("10-second timer completed. Resetting all dungeons")
             reset_all_dungeons()
-            open_chests_task:reset()
             tracker.exit_horde_start_time = nil
             tracker.exit_horde_completion_time = current_time
             tracker.horde_opened = false
