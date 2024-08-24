@@ -51,13 +51,18 @@ local open_chests_task = {
     end,
 
     init_chest_opening = function(self)
-        local aether_bomb = utils.get_aether_actor()
-        if aether_bomb then
-            self.current_state = chest_state.MOVING_TO_AETHER
+        if settings.always_open_ga_chest and not tracker.ga_chest_opened and utils.get_chest(enums.chest_types["GREATER_AFFIX"]) then
+            self.current_chest_type = "GREATER_AFFIX"
+            self.current_state = chest_state.MOVING_TO_CHEST
         else
-            self.current_state = chest_state.SELECTING_CHEST
+            local aether_bomb = utils.get_aether_actor()
+            if aether_bomb then
+                self.current_state = chest_state.MOVING_TO_AETHER
+            else
+                self.current_state = chest_state.SELECTING_CHEST
+            end
+            self.failed_attempts = 0
         end
-        self.failed_attempts = 0
     end,
 
     move_to_aether = function(self)
@@ -69,7 +74,6 @@ local open_chests_task = {
                 self.current_state = chest_state.COLLECTING_AETHER
             end
         else
-            -- Handle the case when no aether bomb is found
             console.print("No aether bomb found")
             self.current_state = chest_state.SELECTING_CHEST
         end
@@ -89,8 +93,8 @@ local open_chests_task = {
     select_chest = function(self)
         local chest_type_map = {"GEAR", "MATERIALS", "GOLD"}
         self.selected_chest_type = chest_type_map[settings.selected_chest_type + 1]
-    
-        if settings.always_open_ga_chest and not tracker.ga_chest_opened and utils.get_chest(enums.chest_types["GREATER_AFFIX"]) then
+        
+        if not tracker.ga_chest_opened and settings.always_open_ga_chest and utils.get_chest(enums.chest_types["GREATER_AFFIX"]) then
             self.current_chest_type = "GREATER_AFFIX"
         else
             self.current_chest_type = self.selected_chest_type
@@ -111,6 +115,8 @@ local open_chests_task = {
             end
         else
             console.print("Chest not found")
+            tracker.finished_chest_looting = true
+            tracker.gold_chest_successfully_opened = true
             self:try_next_chest()
         end
     end,
@@ -164,7 +170,6 @@ local open_chests_task = {
                 self.failed_attempts = 0
             else
                 console.print("Retrying user-selected chest type")
-                -- Don't change the chest type, just reset failed attempts
                 self.failed_attempts = 0
             end
         elseif self.current_chest_type == "GOLD" then
@@ -181,9 +186,23 @@ local open_chests_task = {
             tracker.ga_chest_opened = true
         elseif self.current_chest_type == self.selected_chest_type then
             tracker.selected_chest_opened = true
-        elseif self.current_chest_type == "GOLD" then
-            tracker.finished_chest_looting = true
         end
+    
+        if self.current_chest_type == "GOLD" then
+            tracker.gold_chest_opened = true
+            if not tracker.ga_chest_opened and not tracker.selected_chest_opened then
+                tracker.finished_chest_looting = true
+                tracker.gold_chest_successfully_opened = true
+            end
+        end
+    
+        if (tracker.ga_chest_opened or not settings.always_open_ga_chest) and
+           (tracker.selected_chest_opened or self.selected_chest_type == "GOLD") and
+           tracker.gold_chest_opened then
+            tracker.finished_chest_looting = true
+            tracker.gold_chest_successfully_opened = true
+        end
+    
         self.current_state = chest_state.INIT
         self.current_chest_type = nil
         self.failed_attempts = 0
