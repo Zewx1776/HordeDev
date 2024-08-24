@@ -4,6 +4,7 @@ local settings = require "core.settings"
 local navigation = require "core.navigation"
 local tracker = require "core.tracker"
 local explorer = require "core.explorer"
+tracker.horde_opened = false  -- For start_dungeon again, after dying and exit horde
 
 -- Define the bomber object with its states and tasks
 local bomber = {
