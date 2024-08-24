@@ -11,7 +11,8 @@ local chest_state = {
     MOVING_TO_CHEST = "MOVING_TO_CHEST",
     OPENING_CHEST = "OPENING_CHEST",
     WAITING_FOR_VFX = "WAITING_FOR_VFX",
-    FINISHED = "FINISHED"
+    FINISHED = "FINISHED",
+    PAUSED_FOR_SALVAGE = "PAUSED_FOR_SALVAGE",
 }
 
 local chest_order = {"GREATER_AFFIX", "SELECTED", "GOLD"}
@@ -22,13 +23,30 @@ local open_chests_task = {
     current_chest_type = nil,
     failed_attempts = 0,
     max_attempts = 3,
+    state_before_pause = nil,
     
     shouldExecute = function()
+        if tracker.needs_salvage then
+            return false
+        end
         return utils.player_in_zone("S05_BSK_Prototype02") and (utils.get_chest(enums.chest_types["GOLD"]) or not tracker.finished_chest_looting)
     end,
     
     Execute = function(self)
         local current_time = get_time_since_inject()
+
+        if tracker.needs_salvage then
+            if self.current_state ~= chest_state.PAUSED_FOR_SALVAGE then
+                self.state_before_pause = self.current_state
+                self.current_state = chest_state.PAUSED_FOR_SALVAGE
+                console.print("Pausing chest opening for salvage")
+            end
+            return
+        elseif self.current_state == chest_state.PAUSED_FOR_SALVAGE then
+            self.current_state = self.state_before_pause
+            self.state_before_pause = nil
+            console.print("Resuming chest opening after salvage")
+        end
         
         if self.current_state == chest_state.FINISHED then
             self:finish_chest_opening()
@@ -257,12 +275,23 @@ local open_chests_task = {
         end
     
         tracker.finished_chest_looting = true
-        tracker.gold_chest_successfully_opened = true
+        tracker.gold_chest_opened = true
         console.print("Set tracker.finished_chest_looting to true in finish_chest_opening")
     
         console.print("Chest opening task finished")
         return
-    end
+    end,
+
+    reset = function(self)
+        self.current_state = chest_state.INIT
+        self.current_chest_type = nil
+        self.failed_attempts = 0
+        tracker.finished_chest_looting = false
+        tracker.ga_chest_opened = false
+        tracker.selected_chest_opened = false
+        tracker.gold_chest_opened = false
+        console.print("Reset open_chests_task and related tracker flags")
+    end,
 }
 
 return open_chests_task

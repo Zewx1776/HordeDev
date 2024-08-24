@@ -14,10 +14,18 @@ local task = {
     interact_time = 0,
     reset_salvage_time = 0, -- Add this variable to track the reset time
     portal_interact_time = 0,
+    needs_salvage = false,
 
     shouldExecute = function()
-        return (get_local_player():get_item_count() >= 25 and settings.loot_modes == gui.loot_modes_enum.SALVAGE)
+        local should_salvage = (get_local_player():get_item_count() >= 25 and settings.loot_modes == gui.loot_modes_enum.SALVAGE)
             or tracker.has_salvaged
+        
+        if should_salvage then
+            tracker.needs_salvage = true
+            task.needs_salvage = true
+        end
+        
+        return should_salvage
     end,
     Execute = function(self)
         local current_time = get_time_since_inject()
@@ -97,8 +105,13 @@ local task = {
 
         if not success then
             console.print("An error occurred: " .. tostring(error))
+        else
+            if self.needs_salvage and not tracker.has_salvaged then
+                tracker.needs_salvage = false
+                self.needs_salvage = false
+            end
         end
-
+    
         return true
     end
 }

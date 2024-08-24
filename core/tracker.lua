@@ -13,16 +13,9 @@ local tracker = {
     first_run = false,
     exit_horde_completion_time = 0,
     exit_horde_completed = true,
-    wave_start_time = 0
+    wave_start_time = 0,
+    needs_salvage = false,
 }
-
-function tracker.reset_chest_trackers()
-    tracker.ga_chest_opened = false
-    tracker.selected_chest_opened = false
-    tracker.gold_chest_opened = false
-    tracker.finished_chest_looting = false
-end
-
 
 function tracker.check_time(key, delay)
     local current_time = get_time_since_inject()
