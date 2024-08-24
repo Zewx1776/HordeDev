@@ -247,22 +247,25 @@ local open_chests_task = {
     
         local function move_to_next_chest()
             current_chest_index = current_chest_index + 1
-            if current_chest_index > #chest_order then
+            if current_chest_index <= #chest_order then
+                local next_chest = chest_order[current_chest_index]
+                if next_chest == "SELECTED" then
+                    self.current_chest_type = self.selected_chest_type
+                else
+                    self.current_chest_type = next_chest
+                end
+                return true
+            end
+            return false
+        end
+    
+        if not was_successful or self.current_chest_type ~= self.selected_chest_type then
+            if not move_to_next_chest() then
                 console.print("All chest types exhausted, finishing task")
                 self.current_state = chest_state.FINISHED
                 tracker.finished_chest_looting = true
                 return
             end
-            local next_chest = chest_order[current_chest_index]
-            if next_chest == "SELECTED" then
-                self.current_chest_type = self.selected_chest_type
-            else
-                self.current_chest_type = next_chest
-            end
-        end
-    
-        if not was_successful or self.current_chest_type ~= self.selected_chest_type then
-            move_to_next_chest()
         end
     
         if self.current_chest_type == "GREATER_AFFIX" then
@@ -271,11 +274,6 @@ local open_chests_task = {
             tracker.selected_chest_opened = true
         elseif self.current_chest_type == "GOLD" then
             tracker.gold_chest_opened = true
-        end
-    
-        if self.current_state == chest_state.FINISHED then
-            console.print("All chest types exhausted, finishing task")
-            return
         end
     
         console.print("Next chest type set to: " .. self.current_chest_type)
