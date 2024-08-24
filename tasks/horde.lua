@@ -32,13 +32,19 @@ local move_positions = {
 
 -- Data for circular shooting pattern
 local circle_data = {
-    radius = 30,
+    radius = 10,
     steps = 1,
     delay = 0.01,
     current_step = 1,
     last_action_time = 0,
     height_offset = 1
 }
+
+function bomber:bomb_to(pos)
+    --explorer:clear_path_and_target()
+    explorer:set_custom_target(pos)
+    explorer:move_to_target()
+end
 
 -- Function to get the current time since the script was injected
 local function get_current_time()
@@ -99,25 +105,49 @@ function bomber:shoot_in_circle()
 end
 
 
--- Function to get the current target based on various criteria
 function bomber:get_target()
+    local spire = nil
+    local mass = nil
+    local membrane = nil
+    local hellborne = nil
+    local aether = nil
+    local monster = nil
+
     local actors = actors_manager:get_all_actors()
     for _, actor in pairs(actors) do
-        local name = actor:get_skin_name()
         local health = actor:get_current_health()
-        local pos = actor:get_position()
+        local name = actor:get_skin_name()
+        local a_pos = actor:get_position()
         local is_special = actor:is_boss() or actor:is_champion() or actor:is_elite()
 
-        -- Check conditions for different types of targets
-        if not evade.is_dangerous_position(pos) then
-            if name:match("Soulspire") and health > 1 then return actor end
-            if (name:match("Mass") or name:match("Zombie")) and health > 1 then return actor end
-            if is_special then return actor end
-            if target_selector.is_valid_enemy(actor) then return actor end
-            if name == "BurningAether" then return actor end
-            if name == "MarkerLocation_BSK_Occupied" then return actor end
+        if not evade.is_dangerous_position(a_pos) then
+            if name:match("Soulspire") and health > 1 then
+                spire = actor
+            end
+
+            if name == "BurningAether" then
+                aether = actor
+            end
+
+            if (name:match("Mass") or name:match("Zombie")) and health > 1 then
+                mass = actor
+            end
+
+            if name == "MarkerLocation_BSK_Occupied" then
+                membrane = actor
+            end
+
+            if is_special then
+                hellborne = actor
+            end
+
+            if target_selector.is_valid_enemy(actor) then
+                monster = actor
+            end
         end
     end
+
+    return spire or hellborne or mass or membrane or aether or monster
 end
 
 -- List of pylons with their priorities
@@ -257,13 +287,11 @@ function bomber:main_pulse()
         local aether_actor = bomber:get_aether_actor()
         if aether_actor then
             console.print("Targeting Aether actor.")
-            explorer:set_custom_target(aether_actor:get_position())
-            explorer:move_to_target()
+            bomber:bomb_to(aether_actor:get_position())
         else
             console.print("Targeting Pylon and interacting with it.")
             if utils.distance_to(pylon) > 2 then
-                explorer:set_custom_target(pylon:get_position())
-                explorer:move_to_target()
+                bomber:bomb_to(pylon:get_position())
             else
                 console.print("interacting with pylon")
                 interact_object(pylon)
@@ -278,8 +306,7 @@ function bomber:main_pulse()
     if locked_door then
         if utils.distance_to(locked_door) > 2 then
             console.print("Moving to locked door position.")
-            explorer:set_custom_target(locked_door:get_position())
-            explorer:move_to_target()             
+            bomber:bomb_to(locked_door:get_position())             
         else
             console.print("Interacting with locked door.")
             interact_object(locked_door)
@@ -293,8 +320,7 @@ function bomber:main_pulse()
         local name = target:get_skin_name()
         if utils.distance_to(target) > 1.5 then
             console.print("Moving to target: " .. name)  -- Print target name
-            explorer:set_custom_target(target:get_position())
-            explorer:move_to_target()
+            bomber:bomb_to(target:get_position())
         else
             console.print("Target " .. name .. " in range. Performing circular shooting.")
             bomber:shoot_in_circle()
@@ -307,21 +333,20 @@ function bomber:main_pulse()
             local aether = bomber:get_aether_actor()
             if aether then
                 console.print("All waves cleared. Targeting Aether actor.")
-                explorer:set_custom_target(aether:get_position())
-                explorer:move_to_target()
+                bomber:bomb_to(aether:get_position())
                 return
             end
 
             if get_player_pos():dist_to(horde_boss_room_position) > 2 then
                 console.print("Moving to boss room position.")
-                explorer:set_custom_target(horde_boss_room_position)
-                explorer:move_to_target()
+                bomber:bomb_to(horde_boss_room_position)
             else
                 console.print("In boss room. Performing circular shooting.")
                 bomber:shoot_in_circle()
             end
         else
-            console.print("Moving in pattern.")
+            console.print("shoot in circle Moving in pattern.")
+            bomber:shoot_in_circle()
             
         end
     end
