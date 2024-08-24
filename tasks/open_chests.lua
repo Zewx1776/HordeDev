@@ -26,9 +26,7 @@ local open_chests_task = {
     state_before_pause = nil,
     
     shouldExecute = function()
-        console.print("shouldExecute check:")
         local in_correct_zone = utils.player_in_zone("S05_BSK_Prototype02")
-        console.print("  In zone: " .. tostring(in_correct_zone))
     
         if not in_correct_zone then
             return false
@@ -40,7 +38,6 @@ local open_chests_task = {
         end
     
         local gold_chest_exists = utils.get_chest(enums.chest_types["GOLD"]) ~= nil
-        console.print("  Gold chest exists: " .. tostring(gold_chest_exists))
     
         if not gold_chest_exists then
             return false
