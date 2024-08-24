@@ -38,6 +38,7 @@ exit_horde_task = {
         if elapsed_time >= 10 then
             console.print("10-second timer completed. Resetting all dungeons")
             reset_all_dungeons()
+            tracker.reset_chest_trackers()
             tracker.exit_horde_start_time = nil
             tracker.exit_horde_completion_time = current_time
             tracker.horde_opened = false
