@@ -3,6 +3,7 @@ local utils = require "core.utils"
 local settings = require "core.settings"
 local enums = require "data.enums"
 local tracker = require "core.tracker"
+local explorer = require "core.explorer"
 
 local chest_state = {
     INIT = "INIT",
