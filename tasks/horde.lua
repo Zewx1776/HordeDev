@@ -32,8 +32,8 @@ local move_positions = {
 
 -- Data for circular shooting pattern
 local circle_data = {
-    radius = 12,
-    steps = 6,
+    radius = 30,
+    steps = 1,
     delay = 0.01,
     current_step = 1,
     last_action_time = 0,
@@ -81,17 +81,16 @@ function bomber:all_waves_cleared()
 
     return not (locked_door_found or enemy_found)  -- Wellen sind gecleared, wenn weder Tür noch Feind gefunden
 end
+
 -- Function to move in a circular pattern and shoot
 function bomber:shoot_in_circle()
     local current_time = get_time_since_inject()
     if current_time - circle_data.last_action_time >= circle_data.delay then
         local player_pos = get_player_pos()
         local angle = (circle_data.current_step / circle_data.steps) * (2 * math.pi)
-
         local x = player_pos:x() + circle_data.radius * math.cos(angle)
         local z = player_pos:z() + circle_data.radius * math.sin(angle)
         local y = player_pos:y() + circle_data.height_offset * math.sin(angle)
-
         explorer:set_custom_target(vec3:new(x, y, z))
         explorer:move_to_target()
         circle_data.last_action_time = current_time
@@ -111,12 +110,12 @@ function bomber:get_target()
 
         -- Check conditions for different types of targets
         if not evade.is_dangerous_position(pos) then
-            if name:match("Soulspire") and health > 20 then return actor end
-            if name == "BurningAether" then return actor end
+            if name:match("Soulspire") and health > 1 then return actor end
             if (name:match("Mass") or name:match("Zombie")) and health > 1 then return actor end
-            if name == "MarkerLocation_BSK_Occupied" then return actor end
             if is_special then return actor end
             if target_selector.is_valid_enemy(actor) then return actor end
+            if name == "BurningAether" then return actor end
+            if name == "MarkerLocation_BSK_Occupied" then return actor end
         end
     end
 end
@@ -216,40 +215,26 @@ local target_reach_time = 0
 
 -- Function to move in a defined pattern to specific positions
 function bomber:move_in_pattern()
-    -- Prüfen, ob ein Ziel gefunden wurde
-    if self:get_target() then
-        console.print("Target found, stopping movement in pattern.")
-        return 
-    end
+    local current_time = get_time_since_inject()
+    if current_time - circle_data.last_action_time >= circle_data.delay then
+        local player_position = get_player_position()
+        local px, py, pz = player_position:x(), player_position:y(), player_position:z()
+        local angle = (circle_data.current_step / circle_data.steps) * (2 * math.pi)
 
-    if move_index > #move_positions then
-        move_index = 1
-    end
+        -- Calculate horizontal movement
+        local x = px + circle_data.radius * math.cos(angle)
+        local z = pz + circle_data.radius * math.sin(angle)
 
-    local target_position = move_positions[move_index]
+        -- Calculate vertical movement (sinusoidal pattern)
+        local y = py + circle_data.height_offset * math.sin(angle)
 
-    -- Extract position components for printing
-    local function position_to_string(pos)
-        return string.format("x: %.2f, y: %.2f, z: %.2f", pos:x(), pos:y(), pos:z())
-    end
-
-    if not reached_target then
-        if utils.distance_to(target_position) > 2 then
-            console.print("Moving to position " .. position_to_string(target_position))
-            explorer:set_custom_target(target_position)
-            explorer:move_to_target()
-            target_reach_time = 0
-        else
-            if target_reach_time == 3 then 
-               reached_target = true
-               target_reach_time = get_time_since_inject()
-               console.print("Reached target position " .. position_to_string(target_position))
-            end
+        local new_position = vec3:new(x, y, z)
+        pathfinder.force_move_raw(new_position)
+        circle_data.last_action_time = current_time
+        circle_data.current_step = circle_data.current_step + 1
+        if circle_data.current_step > circle_data.steps then
+            circle_data.current_step = 1 -- Reset to start a new circle
         end
-    else
-        move_index = move_index + 1
-        reached_target = false
-        console.print("Moving to the next position in the pattern.")
     end
 end
 
@@ -267,21 +252,22 @@ function bomber:main_pulse()
     local current_time = get_current_time()
     local world_name = get_current_world():get_name()
 
-    local pylon = bomber:get_pylons()
-
-    
+    local pylon = bomber:get_pylons()    
     if pylon then
         local aether_actor = bomber:get_aether_actor()
-        
         if aether_actor then
             console.print("Targeting Aether actor.")
             explorer:set_custom_target(aether_actor:get_position())
             explorer:move_to_target()
         else
             console.print("Targeting Pylon and interacting with it.")
-            explorer:set_custom_target(pylon:get_position())
-            explorer:move_to_target()
-            interact_object(pylon)
+            if utils.distance_to(pylon) > 2 then
+                explorer:set_custom_target(pylon:get_position())
+                explorer:move_to_target()
+            else
+                console.print("interacting with pylon")
+                interact_object(pylon)
+            end
         end
         last_enemy_check_time = current_time
         return
@@ -293,8 +279,7 @@ function bomber:main_pulse()
         if utils.distance_to(locked_door) > 2 then
             console.print("Moving to locked door position.")
             explorer:set_custom_target(locked_door:get_position())
-            explorer:move_to_target()
-             
+            explorer:move_to_target()             
         else
             console.print("Interacting with locked door.")
             interact_object(locked_door)
@@ -305,12 +290,13 @@ function bomber:main_pulse()
 
     local target = bomber:get_target()
     if target then
-        if utils.distance_to(target) > 0.5 then
-            console.print("Target detected. Moving to target position.")
+        local name = target:get_skin_name()
+        if utils.distance_to(target) > 1.5 then
+            console.print("Moving to target: " .. name)  -- Print target name
             explorer:set_custom_target(target:get_position())
             explorer:move_to_target()
         else
-            console.print("Target in range. Performing circular shooting.")
+            console.print("Target " .. name .. " in range. Performing circular shooting.")
             bomber:shoot_in_circle()
         end
         last_enemy_check_time = current_time
@@ -330,7 +316,6 @@ function bomber:main_pulse()
                 console.print("Moving to boss room position.")
                 explorer:set_custom_target(horde_boss_room_position)
                 explorer:move_to_target()
-                 
             else
                 console.print("In boss room. Performing circular shooting.")
                 bomber:shoot_in_circle()
