@@ -125,7 +125,8 @@ local open_chests_task = {
         local aether_bomb = utils.get_aether_actor()
         if aether_bomb then
             if utils.distance_to(aether_bomb) > 2 then
-                pathfinder.request_move(aether_bomb:get_position())
+                explorer:set_custom_target(aether_bomb:get_position())
+                explorer:move_to_target()
             else
                 self.current_state = chest_state.COLLECTING_AETHER
             end
@@ -176,7 +177,9 @@ local open_chests_task = {
             if utils.distance_to(chest) > 2 then
                 if tracker.check_time("request_move_to_chest", 0.15) then
                     console.print(string.format("Moving to %s chest", self.current_chest_type))
-                    pathfinder.request_move(chest:get_position())
+                    explorer:set_custom_target(chest:get_position())
+                    explorer:move_to_target()
+
                     self.move_attempts = (self.move_attempts or 0) + 1
                     if self.move_attempts >= 20 then  -- Adjust this number as needed
                         console.print("Failed to reach chest after multiple attempts")

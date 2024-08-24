@@ -18,12 +18,7 @@ local horde_center_position = vec3:new(9.204102, 8.915039, 0.000000)
 local unstuck_position = vec3:new(16.8066444, 12.58058, 0.000000)
 local horde_boss_room_position = vec3:new(-36.17675, -36.3222, 2.200)
 
--- List of positions to move to in a specific pattern
 
-local move_index = 1
-local reached_target = false
-local target_reach_time = 0
-local wait_time = 0.5 -- Time to wait at each position in seconds
 
 local move_positions = {
     horde_center_position,
@@ -62,21 +57,30 @@ function bomber:all_waves_cleared()
     local locked_door_found = false
     local enemy_found = false
 
+    -- Zuerst nach Gegnern suchen
     for _, actor in pairs(actors) do
-        if actor:get_skin_name() == "BSK_MapIcon_LockedDoor" then
-            locked_door_found = true
-        elseif target_selector.is_valid_enemy(actor) then
+        if target_selector.is_valid_enemy(actor) then
             enemy_found = true
+            break  -- Schleife beenden, sobald ein Gegner gefunden wurde
         end
+    end
 
-        if locked_door_found or enemy_found then
-            return false  -- Wellen sind nicht gecleared
+    -- Wenn kein Gegner gefunden wurde, nach verschlossenen Türen suchen
+    if not enemy_found then
+        for _, actor in pairs(actors) do
+            if actor:get_skin_name() == "BSK_MapIcon_LockedDoor" then
+                locked_door_found = true
+                break  -- Schleife beenden, sobald eine verschlossene Tür gefunden wurde
+            end
         end
+    end
+
+    if not enemy_found and locked_door_found then
+        bomber:move_in_pattern()
     end
 
     return not (locked_door_found or enemy_found)  -- Wellen sind gecleared, wenn weder Tür noch Feind gefunden
 end
-
 -- Function to move in a circular pattern and shoot
 function bomber:shoot_in_circle()
     local current_time = get_time_since_inject()
@@ -204,10 +208,15 @@ function bomber:get_aether_actor()
     end
 end
 
+local move_index = 1
+local reached_target = false
+local target_reach_time = 0
+
+
 
 -- Function to move in a defined pattern to specific positions
 function bomber:move_in_pattern()
-   
+    -- Prüfen, ob ein Ziel gefunden wurde
     if self:get_target() then
         console.print("Target found, stopping movement in pattern.")
         return 
@@ -229,25 +238,21 @@ function bomber:move_in_pattern()
             console.print("Moving to position " .. position_to_string(target_position))
             explorer:set_custom_target(target_position)
             explorer:move_to_target()
+            target_reach_time = 0
         else
-            reached_target = true
-            target_reach_time = get_time_since_inject()
-            console.print("Reached target position " .. position_to_string(target_position))
+            if target_reach_time == 3 then 
+               reached_target = true
+               target_reach_time = get_time_since_inject()
+               console.print("Reached target position " .. position_to_string(target_position))
+            end
         end
     else
-        if get_time_since_inject() - target_reach_time >= wait_time then
-            -- Nochmals prüfen, ob ein Ziel gefunden wurde
-            if self:get_target() then
-                console.print("Target found, stopping movement in pattern.")
-                return -- Beendet die Ausführung von move_in_pattern
-            end
-            
-            move_index = move_index + 1
-            reached_target = false
-            console.print("Moving to the next position in the pattern.")
-        end
+        move_index = move_index + 1
+        reached_target = false
+        console.print("Moving to the next position in the pattern.")
     end
 end
+
 local last_enemy_check_time = 0
 local enemy_check_interval = 0.000001 -- Interval in seconds to check for enemies
 
@@ -311,13 +316,7 @@ function bomber:main_pulse()
         last_enemy_check_time = current_time
         return
     else
-        if get_current_time() - last_enemy_check_time > enemy_check_interval then
-            -- No enemies found for 8 seconds, look for enemies
-            console.print("No enemies detected for 8 seconds. Searching....")
-            bomber:move_in_pattern()
-            last_enemy_check_time = current_time
-        end
-
+        
         if bomber:all_waves_cleared() then
             local aether = bomber:get_aether_actor()
             if aether then
@@ -344,6 +343,8 @@ function bomber:main_pulse()
 end
 
 -- Define the task for the Infernal Horde and its execution conditions
+local has_printed_execution_message = false
+
 local task = {
     name = "Infernal Horde",
     shouldExecute = function()
@@ -351,9 +352,11 @@ local task = {
     end,
     
     Execute = function()
-        console.print("Infernal Horde task executing.")
+        if not has_printed_execution_message then
+            console.print("Infernal Horde task executing.")
+            has_printed_execution_message = true
+        end
         bomber:main_pulse()
     end
 }
-
 return task
