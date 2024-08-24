@@ -5,11 +5,6 @@ local navigation = require "core.navigation"
 local tracker = require "core.tracker"
 local explorer = require "core.explorer"
 
--- Ensure that the necessary modules are loaded correctly
-if not explorer or not explorer.clear_path_and_target then
-    error("Explorer module or clear_path_and_target method is missing")
-end
-
 -- Define the bomber object with its states and tasks
 local bomber = {
     enabled = false,
@@ -23,6 +18,12 @@ local unstuck_position = vec3:new(16.8066444, 12.58058, 0.000000)
 local horde_boss_room_position = vec3:new(-36.17675, -36.3222, 2.200)
 
 -- List of positions to move to in a specific pattern
+
+local move_index = 1
+local reached_target = false
+local target_reach_time = 0
+local wait_time = 0.5 -- Time to wait at each position in seconds
+
 local move_positions = {
     horde_center_position,
     vec3:new(19.5658, -1.5756, 0.6289),       -- From Middle to Left side 
@@ -32,11 +33,6 @@ local move_positions = {
     vec3:new(0.24825286, 20.6410, 0.4697),    -- From Middle to Right side
     horde_center_position,
 }
-
-local move_index = 1
-local reached_target = false
-local target_reach_time = 0
-local wait_time = 5 -- Time to wait at each position in seconds
 
 -- Data for circular shooting pattern
 local circle_data = {
@@ -58,45 +54,26 @@ local function get_player_pos()
     return get_player_position()
 end
 
--- Function to move the player to a specific position if they are not already there
-local function move_to_position(pos)
-    if utils.distance_to(pos) > 2 then
-        pathfinder.force_move_raw(pos)
-    end
-end
-
--- Function to check if the player is stuck and handle it by moving to a backup position
-function bomber:check_and_handle_stuck()
-    if explorer.check_if_stuck() then
-        console.print("Player is stuck. Attempting to move to backup position.")
-        pathfinder.force_move_raw(horde_center_position)
-        return true
-    end
-    return false
-end
 
 -- Function to check if all waves are cleared
 function bomber:all_waves_cleared()
     local actors = actors_manager:get_all_actors()
-    local waves_cleared = true
+    local locked_door_found = false
+    local enemy_found = false
 
-    -- Check if there are any locked doors remaining
     for _, actor in pairs(actors) do
         if actor:get_skin_name() == "BSK_MapIcon_LockedDoor" then
-            waves_cleared = false
+            locked_door_found = true
+        elseif target_selector.is_valid_enemy(actor) then
+            enemy_found = true
+        end
+
+        if locked_door_found or enemy_found then
+            return false  -- Wellen sind nicht gecleared
         end
     end
 
-    -- Check if there are any remaining enemies
-    local remaining_enemies = false
-    for _, actor in pairs(actors) do
-        if not evade.is_dangerous_position(actor:get_position()) and target_selector.is_valid_enemy(actor) then
-            remaining_enemies = true
-            break
-        end
-    end
-
-    return waves_cleared and not remaining_enemies
+    return not (locked_door_found or enemy_found)  -- Wellen sind gecleared, wenn weder Tür noch Feind gefunden
 end
 
 -- Function to move in a circular pattern and shoot
@@ -116,26 +93,6 @@ function bomber:shoot_in_circle()
     end
 end
 
-local last_move_time = 0
-local move_timeout = 8
-
--- Function to move the player to a specific position and clear the path if needed
-function bomber:bomb_to(pos)
-    local current_time = get_time_since_inject()
-    if current_time - last_move_time > move_timeout then
-        console.print("Move timeout reached. Clearing path and targeting new position.")
-        explorer:clear_path_and_target()
-        explorer:set_custom_target(pos)
-        last_move_time = current_time
-    end
-
-    pathfinder.force_move_raw(pos)
-
-    if utils.distance_to(pos) < 2 then
-        last_move_time = current_time
-        console.print("Target reached.")
-    end
-end
 
 -- Function to get the current target based on various criteria
 function bomber:get_target()
@@ -234,22 +191,6 @@ function bomber:get_locked_door()
     return not in_wave and is_locked and door_actor
 end
 
--- Table to keep track of gathered buffs
-local buffs_gathered = {}
-
--- Function to gather and log buffs obtained by the player
-function bomber:gather_buffs()
-    local local_player = get_local_player()
-    local buffs = local_player:get_buffs()
-    for _, buff in pairs(buffs) do
-        local buff_id = buff.name_hash
-        if not buffs_gathered[buff_id] then
-            buffs_gathered[buff_id] = true
-            console.print("New Buff Acquired: " .. buff:name() .. " (ID: " .. buff.name_hash .. ")")
-        end
-    end
-end
-
 -- Function to get the Aether actor if present
 function bomber:get_aether_actor()
     local actors = actors_manager:get_all_actors()
@@ -264,6 +205,12 @@ end
 
 -- Function to move in a defined pattern to specific positions
 function bomber:move_in_pattern()
+   
+    if self:get_target() then
+        console.print("Target found, stopping movement in pattern.")
+        return 
+    end
+
     if move_index > #move_positions then
         move_index = 1
     end
@@ -285,40 +232,21 @@ function bomber:move_in_pattern()
             console.print("Reached target position " .. position_to_string(target_position))
         end
     else
-        -- Check if 2 seconds have passed before moving to the next position
         if get_time_since_inject() - target_reach_time >= wait_time then
+            -- Nochmals prüfen, ob ein Ziel gefunden wurde
+            if self:get_target() then
+                console.print("Target found, stopping movement in pattern.")
+                return -- Beendet die Ausführung von move_in_pattern
+            end
+            
             move_index = move_index + 1
             reached_target = false
             console.print("Moving to the next position in the pattern.")
         end
     end
 end
-
-function bomber:move_to_center_and_wait()
-    local current_time = get_time_since_inject()
-
-    -- Wenn der Charakter nicht bereits zur Mitte gelaufen ist
-    if not self.center_reached then
-        -- Bewege den Charakter zur Mitte des Raumes
-        pathfinder.force_move_raw(horde_center_position)
-        if utils.distance_to(horde_center_position) <= 2 then
-            -- Wenn der Charakter die Mitte erreicht hat, setze den Zeitstempel für das Warten
-            self.center_reach_time = current_time
-            self.center_reached = true
-            console.print("Erreicht die Mitte des Raumes. Wartezeit beginnt.")
-        end
-    elseif current_time - self.center_reach_time >= 0.5 then
-        -- Wenn 0,5 Sekunden vergangen sind, fahre mit dem nächsten Schritt fort
-        self.center_reached = false
-        self.center_reach_time = nil
-        console.print("Wartezeit abgeschlossen. Fortfahren mit dem nächsten Schritt.")
-    end
-end
-
-
-
 local last_enemy_check_time = 0
-local enemy_check_interval = 5 -- Interval in seconds to check for enemies
+local enemy_check_interval = 8 -- Interval in seconds to check for enemies
 
 -- Main function to handle the bomber's actions based on the current game state
 function bomber:main_pulse()
@@ -328,28 +256,21 @@ function bomber:main_pulse()
         return
     end
 
-    if bomber:check_and_handle_stuck() then
-        return
-    end
-
     local current_time = get_current_time()
     local world_name = get_current_world():get_name()
 
-    -- Return if the player is in a sanctuary or limbo world
-    if world_name == "Limbo" or world_name:match("Sanctuary") then
-        console.print("Player is in a sanctuary or limbo world. No actions taken.")
-        return
-    end
-
     local pylon = bomber:get_pylons()
+
+    
     if pylon then
         local aether_actor = bomber:get_aether_actor()
+        
         if aether_actor then
             console.print("Targeting Aether actor.")
-            bomber:bomb_to(aether_actor:get_position())
+            pathfinder.force_move_raw(aether_actor:get_position())
         else
             console.print("Targeting Pylon and interacting with it.")
-            move_to_position(pylon:get_position())
+            pathfinder.force_move_raw(pylon:get_position())
             interact_object(pylon)
         end
         last_enemy_check_time = current_time
@@ -357,14 +278,12 @@ function bomber:main_pulse()
     end
 
     local locked_door = bomber:get_locked_door()
+    
     if locked_door then
-        if tracker.finished_chest_looting then
-            tracker.reset_chest_trackers()
-            console.print("Resetting chest trackers.")
-        end
         if utils.distance_to(locked_door) > 2 then
             console.print("Moving to locked door position.")
-            bomber:bomb_to(locked_door:get_position())
+            pathfinder.force_move_raw(locked_door:get_position())
+             
         else
             console.print("Interacting with locked door.")
             interact_object(locked_door)
@@ -375,9 +294,9 @@ function bomber:main_pulse()
 
     local target = bomber:get_target()
     if target then
-        if utils.distance_to(target) > 1.5 then
+        if utils.distance_to(target) > 0.5 then
             console.print("Target detected. Moving to target position.")
-            bomber:bomb_to(target:get_position())
+            pathfinder.force_move_raw(target:get_position())
         else
             console.print("Target in range. Performing circular shooting.")
             bomber:shoot_in_circle()
@@ -386,9 +305,9 @@ function bomber:main_pulse()
         return
     else
         if get_current_time() - last_enemy_check_time > enemy_check_interval then
-            -- No enemies found for 5 seconds, return to the center
-            console.print("No enemies detected for 5 seconds. Returning to the center.")
-            pathfinder.force_move_raw(horde_center_position)
+            -- No enemies found for 8 seconds, look for enemies
+            console.print("No enemies detected for 8 seconds. Searching....")
+            bomber:move_in_pattern()
             last_enemy_check_time = current_time
         end
 
@@ -396,20 +315,21 @@ function bomber:main_pulse()
             local aether = bomber:get_aether_actor()
             if aether then
                 console.print("All waves cleared. Targeting Aether actor.")
-                bomber:bomb_to(aether:get_position())
+                pathfinder.force_move_raw(aether:get_position())
                 return
             end
 
             if get_player_pos():dist_to(horde_boss_room_position) > 2 then
                 console.print("Moving to boss room position.")
-                bomber:bomb_to(horde_boss_room_position)
+                pathfinder.force_move_raw(horde_boss_room_position)
+                 
             else
                 console.print("In boss room. Performing circular shooting.")
                 bomber:shoot_in_circle()
             end
         else
             console.print("Moving in pattern.")
-            bomber:move_in_pattern()
+            
         end
     end
 end
@@ -423,7 +343,6 @@ local task = {
     
     Execute = function()
         console.print("Infernal Horde task executing.")
-        tracker.horde_opened = false
         bomber:main_pulse()
     end
 }

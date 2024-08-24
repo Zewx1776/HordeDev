@@ -83,22 +83,22 @@ local last_move_time = 0
 local last_explored_targets = {}
 local max_last_targets = 50
 
-local function check_pit_time()
-    if tracker.pit_start_time > 0 then
-        local time_spent_in_pit = get_time_since_inject() - tracker.pit_start_time
-    end
-end
+-- local function check_pit_time()
+   -- if tracker.pit_start_time > 0 then
+       -- local time_spent_in_pit = get_time_since_inject() - tracker.pit_start_time
+   -- end
+--end
 
-local function check_and_reset_dungeons()
-    if tracker.pit_start_time > 0 then
-        local time_spent_in_pit = get_time_since_inject() - tracker.pit_start_time
-        local reset_time_threshold = settings.reset_time
-        if time_spent_in_pit > reset_time_threshold then
-            console.print("Time spent in pit is greater than " .. reset_time_threshold .. " seconds. Resetting all dungeons.")
-            reset_all_dungeons()
-        end
-    end
-end
+-- local function check_and_reset_dungeons()
+   -- if tracker.pit_start_time > 0 then
+      --  local time_spent_in_pit = get_time_since_inject() - tracker.pit_start_time
+      --  local reset_time_threshold = settings.reset_time
+      --  if time_spent_in_pit > reset_time_threshold then
+         --   console.print("Time spent in pit is greater than " .. reset_time_threshold .. " seconds. Resetting all dungeons.")
+          --  reset_all_dungeons()
+       -- end
+   -- end
+-- end
 
 local current_path = {}
 local path_index = 1
@@ -107,6 +107,7 @@ local exploration_mode = "unexplored"
 local exploration_direction = { x = 10, y = 0 }
 local last_movement_direction = nil
 
+-- not necessary for Infernal Horde
 function explorer:clear_path_and_target()
     target_position = nil
     current_path = {}
@@ -434,9 +435,7 @@ local stuck_cooldown = 0
 local stuck_cooldown_time = 5  -- 5 Sekunden Cooldown
 
 local function on_update()
-    check_pit_time()
-    check_and_reset_dungeons()
-    check_walkable_area()
+    
 
     local current_time = get_time_since_inject()
 
@@ -456,7 +455,7 @@ local function on_update()
                 end
                 if target_position then
                     console.print("Moving to new target position.")
-                    move_to_target()
+                    pathfinder.force_move_raw(new_pos)
                 else
                     console.print("No valid targets found. Exiting.")
                 end
@@ -471,13 +470,13 @@ local function on_update()
                 end
                 if target_position then
                     console.print("Moving to new target position.")
-                    move_to_target()
+                    pathfinder.force_move_raw(pos)
                 else
                     console.print("No valid targets found. Exiting.")
                 end
             else
                 console.print("Continuing to current target.")
-                move_to_target()
+                pathfinder.force_move_raw(pos)
             end
             
             stuck_cooldown = current_time + stuck_cooldown_time
@@ -503,7 +502,7 @@ local function on_update()
         console.print("No current target. Finding new target.")
         target_position = find_unexplored_target() or find_random_explored_target()
         if target_position then
-            move_to_target()
+            pathfinder.force_move_raw(pos)
         else
             console.print("No valid targets found. Exiting.")
         end
@@ -518,13 +517,6 @@ function explorer:clear_path_and_target()
     path_index = 1
 end
 
-function explorer:move_to_target()
-    if target_position then
-        pathfinder.force_move_raw(target_position)
-    else
-        console.print("No target position set.")
-    end
-end
 
 function explorer:set_custom_target(pos)
     target_position = pos
@@ -538,5 +530,7 @@ end
 function explorer:check_if_stuck()
     return check_if_stuck()
 end
+
+explorer.on_update = on_update
 
 return explorer

@@ -124,7 +124,7 @@ local open_chests_task = {
     end,
 
     open_chest = function(self)
-        if tracker.check_time("chest_opening_time", 1) then
+        if tracker.check_time("chest_opening_time", 1.25) then
             local chest = utils.get_chest(enums.chest_types[self.current_chest_type])
             if chest then
                 local try_open_chest = interact_object(chest)
@@ -138,7 +138,7 @@ local open_chests_task = {
     end,
 
     wait_for_vfx = function(self)
-        if tracker.check_time("chest_vfx_wait", 0.75) then
+        if tracker.check_time("chest_vfx_wait", 1) then
             local actors = actors_manager:get_all_actors()
             for _, actor in pairs(actors) do
                 local name = actor:get_skin_name()
