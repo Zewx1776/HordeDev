@@ -14,6 +14,8 @@ local chest_state = {
     FINISHED = "FINISHED"
 }
 
+local chest_order = {"GREATER_AFFIX", "SELECTED", "GOLD"}
+
 local open_chests_task = {
     name = "Open Chests",
     current_state = chest_state.INIT,
@@ -67,12 +69,14 @@ local open_chests_task = {
         self.selected_chest_type = chest_type_map[settings.selected_chest_type + 1]
     
         -- If no aether, proceed with chest selection
+        current_chest_index = 1
         if settings.always_open_ga_chest and not tracker.ga_chest_opened then
             self.current_chest_type = "GREATER_AFFIX"
         else
+            current_chest_index = 2  -- Skip to SELECTED
             self.current_chest_type = self.selected_chest_type
         end
-    
+        
         console.print("self.selected_chest_type: " .. tostring(self.selected_chest_type))
         console.print("self.current_chest_type: " .. tostring(self.current_chest_type))
         self.current_state = chest_state.MOVING_TO_CHEST
@@ -129,14 +133,22 @@ local open_chests_task = {
     
         console.print("Attempting to find " .. self.current_chest_type .. " chest")
         local chest = utils.get_chest(enums.chest_types[self.current_chest_type])
+        
         if chest then
             if utils.distance_to(chest) > 2 then
                 if tracker.check_time("request_move_to_chest", 0.15) then
                     console.print(string.format("Moving to %s chest", self.current_chest_type))
                     pathfinder.request_move(chest:get_position())
+                    self.move_attempts = (self.move_attempts or 0) + 1
+                    if self.move_attempts >= 20 then  -- Adjust this number as needed
+                        console.print("Failed to reach chest after multiple attempts")
+                        self:try_next_chest()
+                        return
+                    end
                 end
             else
                 self.current_state = chest_state.OPENING_CHEST
+                self.move_attempts = 0  -- Reset the counter when we successfully reach the chest
             end
         else
             console.print("Chest not found")
@@ -173,7 +185,8 @@ local open_chests_task = {
                 local name = actor:get_skin_name()
                 if name == "vfx_resplendentChest_coins" or name == "vfx_resplendentChest_lightRays" or name:match("g_gold") then
                     console.print("Chest opened successfully: " .. name)
-                    self:try_next_chest()  -- Move to next chest type after successful opening
+                    self.failed_attempts = 0
+                    self:try_next_chest(true)  -- Move to next chest type after successful opening
                     return
                 end
             end
@@ -181,43 +194,53 @@ local open_chests_task = {
             console.print("No visual effects found, chest opening may have failed")
             self.failed_attempts = self.failed_attempts + 1
             if self.failed_attempts >= self.max_attempts then
-                self:try_next_chest()
+                self:try_next_chest(false)
             else
                 self.current_state = chest_state.OPENING_CHEST
             end
         end
     end,
 
-    try_next_chest = function(self)
+    try_next_chest = function(self, was_successful)
         console.print("Trying next chest")
         console.print("Current self.current_chest_type: " .. tostring(self.current_chest_type))
         console.print("Current self.selected_chest_type: " .. tostring(self.selected_chest_type))
+    
+        local function move_to_next_chest()
+            current_chest_index = current_chest_index + 1
+            if current_chest_index > #chest_order then
+                console.print("All chest types exhausted, finishing task")
+                self.current_state = chest_state.FINISHED
+                return
+            end
+            local next_chest = chest_order[current_chest_index]
+            if next_chest == "SELECTED" then
+                self.current_chest_type = self.selected_chest_type
+            else
+                self.current_chest_type = next_chest
+            end
+        end
+    
+        if not was_successful or self.current_chest_type ~= self.selected_chest_type then
+            move_to_next_chest()
+        end
+    
         if self.current_chest_type == "GREATER_AFFIX" then
             tracker.ga_chest_opened = true
-            console.print("Greater Affix chest attempts exhausted, moving to selected chest type")
-            self.current_chest_type = self.selected_chest_type
-            console.print("New self.current_chest_type: " .. tostring(self.current_chest_type))
-            console.print("Selected chest type is: " .. tostring(self.selected_chest_type))
-            self.failed_attempts = 0
-        elseif self.current_chest_type == self.selected_chest_type and self.selected_chest_type ~= "GOLD" then
+        elseif self.current_chest_type == self.selected_chest_type then
             tracker.selected_chest_opened = true
-            console.print("Selected chest type exhausted, moving to GOLD")
-            self.current_chest_type = "GOLD"
-            self.failed_attempts = 0
-        elseif self.current_chest_type == "GOLD" or (self.current_chest_type == self.selected_chest_type and self.selected_chest_type == "GOLD") then
+        elseif self.current_chest_type == "GOLD" then
             tracker.gold_chest_opened = true
+        end
+    
+        if self.current_state == chest_state.FINISHED then
             console.print("All chest types exhausted, finishing task")
-            self.current_state = chest_state.FINISHED
             return
         end
-        
-        if self.current_chest_type == nil then
-            console.print("Warning: current_chest_type is nil, defaulting to GOLD")
-            self.current_chest_type = "GOLD"
-        end
-        
+    
         console.print("Next chest type set to: " .. self.current_chest_type)
         self.current_state = chest_state.MOVING_TO_CHEST
+        self.failed_attempts = 0
     end,
 
     finish_chest_opening = function(self)
