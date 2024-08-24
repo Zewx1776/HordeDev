@@ -1,218 +1,171 @@
-local utils      = require "core.utils"
-local enums      = require "data.enums"
-local settings   = require "core.settings"
+local utils = require "core.utils"
+local enums = require "data.enums"
+local settings = require "core.settings"
 local navigation = require "core.navigation"
-local tracker    = require "core.tracker"
-local explorer   = require "core.explorer"
+local tracker = require "core.tracker"
+local explorer = require "core.explorer"
+tracker.horde_opened = false  -- For start_dungeon again, after dying and exit horde
 
+-- Define the bomber object with its states and tasks
 local bomber = {
     enabled = false,
-    is_task_running = false,  -- Add this flag
-    bomber_task_running = false
+    is_task_running = false,
+    bomber_task_running = false,
 }
 
-local horde_center_position    = vec3:new(9.204102, 8.915039, 0.000000)
+-- Define key positions for movement and patterns
+local horde_center_position = vec3:new(9.204102, 8.915039, 0.000000)
+local unstuck_position = vec3:new(16.8066444, 12.58058, 0.000000)
 local horde_boss_room_position = vec3:new(-36.17675, -36.3222, 2.200)
 
-local circle_data              = {
-    radius = 14,
-    steps = 8,
+
+
+local move_positions = {
+    horde_center_position,
+    vec3:new(19.5658, -1.5756, 0.6289),       -- From Middle to Left side 
+    horde_center_position,
+    vec3:new(20.17866, 17.897891, 0.24707),   -- From Middle to Down side
+    horde_center_position,
+    vec3:new(0.24825286, 20.6410, 0.4697),    -- From Middle to Right side
+    horde_center_position,
+}
+
+-- Data for circular shooting pattern
+local circle_data = {
+    radius = 12,
+    steps = 6,
     delay = 0.01,
     current_step = 1,
     last_action_time = 0,
-    height_offset = 1 -- Add this for vertical movement
+    height_offset = 1
 }
 
-function bomber:check_and_handle_stuck()
-    if explorer.check_if_stuck() then
-        console.print("Player is stuck. Finding unstuck target.")
-        local unstuck_target = horde_center_position
-        if unstuck_target then
-            console.print("Unstuck target found. Moving to new position.")
-            pathfinder.force_move_raw(unstuck_target)
-            return true
-        else
-            console.print("No unstuck target found. Resetting exploration.")
-            return true
-        end
-    end
-    return false
+-- Function to get the current time since the script was injected
+local function get_current_time()
+    return get_time_since_inject()
 end
 
-local wave_start_time = 0
+-- Function to get the player's current position
+local function get_player_pos()
+    return get_player_position()
+end
 
+
+-- Function to check if all waves are cleared
 function bomber:all_waves_cleared()
-    local current_time = get_time_since_inject()
     local actors = actors_manager:get_all_actors()
+    local locked_door_found = false
+    local enemy_found = false
+
+    -- Zuerst nach Gegnern suchen
     for _, actor in pairs(actors) do
-        local name = actor:get_skin_name()
-        if name == "BSK_MapIcon_LockedDoor" then
-            return false
+        if target_selector.is_valid_enemy(actor) then
+            enemy_found = true
+            break  -- Schleife beenden, sobald ein Gegner gefunden wurde
         end
     end
 
-    return true
-end
+    -- Wenn kein Gegner gefunden wurde, nach verschlossenen Türen suchen
+    if not enemy_found then
+        for _, actor in pairs(actors) do
+            if actor:get_skin_name() == "BSK_MapIcon_LockedDoor" then
+                locked_door_found = true
+                break  -- Schleife beenden, sobald eine verschlossene Tür gefunden wurde
+            end
+        end
+    end
 
+    if not enemy_found and locked_door_found then
+        bomber:move_in_pattern()
+    end
+
+    return not (locked_door_found or enemy_found)  -- Wellen sind gecleared, wenn weder Tür noch Feind gefunden
+end
+-- Function to move in a circular pattern and shoot
 function bomber:shoot_in_circle()
     local current_time = get_time_since_inject()
     if current_time - circle_data.last_action_time >= circle_data.delay then
-        local player_position = get_player_position()
-        local px, py, pz = player_position:x(), player_position:y(), player_position:z()
+        local player_pos = get_player_pos()
         local angle = (circle_data.current_step / circle_data.steps) * (2 * math.pi)
 
-        -- Calculate horizontal movement
-        local x = px + circle_data.radius * math.cos(angle)
-        local z = pz + circle_data.radius * math.sin(angle)
+        local x = player_pos:x() + circle_data.radius * math.cos(angle)
+        local z = player_pos:z() + circle_data.radius * math.sin(angle)
+        local y = player_pos:y() + circle_data.height_offset * math.sin(angle)
 
-        -- Calculate vertical movement (sinusoidal pattern)
-        local y = py + circle_data.height_offset * math.sin(angle)
-
-        local new_position = vec3:new(x, y, z)
-        pathfinder.force_move_raw(new_position)
+        explorer:set_custom_target(vec3:new(x, y, z))
+        explorer:move_to_target()
         circle_data.last_action_time = current_time
-        circle_data.current_step = circle_data.current_step + 1
-        if circle_data.current_step > circle_data.steps then
-            circle_data.current_step = 1 -- Reset to start a new circle
-        end
+        circle_data.current_step = (circle_data.current_step % circle_data.steps) + 1
     end
 end
 
-function bomber:use_all_spells()
-    local ice_armor = utils.player_has_aura(ids.spells.sorcerer.ice_armor)
-    local flame_shield = utils.player_has_aura(ids.spells.sorcerer.flame_shield)
 
-    if not ice_armor and not flame_shield and (utility.is_spell_ready(ids.spells.sorcerer.flame_shield) or utility.is_spell_ready(ids.spells.sorcerer.ice_armor)) then
-        if utility.is_spell_ready(ids.spells.sorcerer.flame_shield) then
-            cast_spell.self(ids.spells.sorcerer.flame_shield, 0)
-            return
-        else
-            cast_spell.self(ids.spells.sorcerer.ice_armor, 0)
-        end
-    end
-
-    if utility.is_spell_ready(ids.spells.sorcerer.ice_blade) then
-        cast_spell.self(ids.spells.sorcerer.ice_blade, 0)
-        return
-    end
-
-    if utility.is_spell_ready(ids.spells.sorcerer.lightning_spear) then
-        cast_spell.self(ids.spells.sorcerer.lightning_spear, 0)
-        return
-    end
-
-    if utility.is_spell_ready(ids.spells.sorcerer.unstable_currents) then
-        cast_spell.self(ids.spells.sorcerer.unstable_currents, 0)
-        return
-    end
-end
-
-local last_move_time = 0
-local move_timeout = 5  -- 5 seconds timeout
-
-function bomber:bomb_to(pos)
-    local current_time = os.time()
-    if current_time - last_move_time > move_timeout then
-        console.print("Move timeout reached. Clearing path and target.")
-        --explorer:clear_path_and_target()
-        last_move_time = current_time
-    end
-    
-    explorer:set_custom_target(pos)
-    explorer:move_to_target()
-    
-    last_move_time = current_time
-end
-
-
+-- Function to get the current target based on various criteria
 function bomber:get_target()
-    local spire = nil
-    local mass = nil
-    local membrane = nil
-    local hellborne = nil
-    local aether = nil
-    local monster = nil
-
     local actors = actors_manager:get_all_actors()
     for _, actor in pairs(actors) do
-        local health = actor:get_current_health()
         local name = actor:get_skin_name()
-        local a_pos = actor:get_position()
+        local health = actor:get_current_health()
+        local pos = actor:get_position()
         local is_special = actor:is_boss() or actor:is_champion() or actor:is_elite()
 
-        if not evade.is_dangerous_position(a_pos) then
-            if name:match("Soulspire") and health > 20 then
-                spire = actor
-            end
-
-            if name == "BurningAether" then
-                aether = actor
-            end
-
-            if (name:match("Mass") or name:match("Zombie")) and health > 1 then
-                mass = actor
-            end
-
-            if name == "MarkerLocation_BSK_Occupied" then
-                membrane = actor
-            end
-
-            if is_special then
-                hellborne = actor
-            end
-
-            if target_selector.is_valid_enemy(actor) then
-                monster = actor
-            end
+        -- Check conditions for different types of targets
+        if not evade.is_dangerous_position(pos) then
+            if name:match("Soulspire") and health > 20 then return actor end
+            if name == "BurningAether" then return actor end
+            if (name:match("Mass") or name:match("Zombie")) and health > 1 then return actor end
+            if name == "MarkerLocation_BSK_Occupied" then return actor end
+            if is_special then return actor end
+            if target_selector.is_valid_enemy(actor) then return actor end
         end
     end
-
-    return spire or hellborne or mass or membrane or aether or monster
 end
 
+-- List of pylons with their priorities
 local pylons = {
-    "SkulkingHellborne",       -- Hellborne Hunting You, Hellborne +1 Aether
-    "SurgingHellborne",        -- +1 Hellborne when Spawned, Hellborne Grant +1 Aether
-    "RagingHellfire",          -- Hellfire rains upon you, at the end of each wave spawn 1-3 Aether
-    "MeteoricHellborne",       -- Hellfire now spawns Hellborne, +1 Aether
-    "EmpoweredHellborne",      -- Hellborne +25% Damage, Hellborne grant +1 Aether
-    "InvigoratingHellborne",   -- Hellborne Damage +25%, Slaying Hellborne Invigorates you
-    "BlisteringHordes",        -- Normal Monster Spawn Aether Events 50% Faster
-    "SurgingElites",           -- Chance for Elite Doubled, Aether Fiends grant +1 Aether
-    "ThrivingMasses",          -- Masses deal unavoidable damage, Wave start, spawn an Aetheric Mass
-    "GestatingMasses",         -- Masses spawn an Aether lord on Death, Aether Lords Grant +3 Aether
-    "EmpoweredMasses",         -- Aetheric Mass damage: +25%, Aetheric Mass grants +1 Aether
-    "EmpoweredElites",         -- Elite damage +25%, Aether Fiends grant +1 Aether
-    "IncreasedEvadeCooldown",  -- Increase Evade Cooldown +2 Sec, Council grants +15 Aether
-    "IncreasedPotionCooldown", -- Increase potion cooldown +2 Sec, Council Grants +15 Aether
-    "EmpoweredCouncil",        -- Fell Council +50% Damage, Council grants +15 Aether
-    "ReduceAllResistance",     -- Reduce All Resist -10%, Council grants +15 Aether
-    "DeadlySpires",            -- Soulspires Drain Health, Soulspires grant +2 Aether
-    "UnstoppableElites",       -- Elites are Unstoppable, Aether Fiends grant +1 Aether
-    "CorruptingSpires",        -- Soulspires empower nearby foes, they also pull enemies inward
-    "UnstableFiends",          -- Elite Damage +25%, Aether Fiends explode and damage FOES
-    "AetherRush",              -- Normal Monsters Damage +25%, Gathering Aether Increases Movement Speed
-    "EnergizingMasses",        -- Slaying Aetheric Masses slow you, While slowed this way, you have UNLIMITED RESOURCES
-    "GreedySpires",            -- Soulspire requires 2x kills, Soulspires grant 2x Aether
-    "InfernalLords",           -- Aether Lords Now Spawn, they grant +3 Aether
-    "InfernalStalker",         -- An Infernal demon has your scent, Slay it to gain +25 Aether
+    "SkulkingHellborne",
+    "SurgingHellborne",
+    "RagingHellfire",
+    "MeteoricHellborne",
+    "EmpoweredHellborne",
+    "InvigoratingHellborne",
+    "BlisteringHordes",
+    "SurgingElites",
+    "ThrivingMasses",
+    "GestatingMasses",
+    "EmpoweredMasses",
+    "EmpoweredElites",
+    "IncreasedEvadeCooldown",
+    "IncreasedPotionCooldown",
+    "EmpoweredCouncil",
+    "ReduceAllResistance",
+    "DeadlySpires",
+    "UnstoppableElites",
+    "CorruptingSpires",
+    "UnstableFiends",
+    "AetherRush",
+    "EnergizingMasses",
+    "GreedySpires",
+    "InfernalLords",
+    "InfernalStalker",
 }
 
-
-
-
+-- Function to get the highest priority pylon from the list
 function bomber:get_pylons()
-    local actors = actors_manager:get_all_actors()
-    local highest_priority_actor = nil
-    local highest_priority = #pylons + 1 -- Set a priority higher than any possible pylon priority
-
-    -- Create a table to store the priority of each pylon
-    local pylon_priority = {}
-    for i, pylon in ipairs(pylons) do
-        pylon_priority[pylon] = i -- Assign priority based on the order in the pylons table
+    if not pylons or #pylons == 0 then
+        console.print("Error: Pylon list is empty or not defined.")
+        return nil
     end
 
-    -- Loop through all actors once
+    local actors = actors_manager:get_all_actors()
+    local highest_priority_actor = nil
+    local highest_priority = #pylons + 1
+
+    local pylon_priority = {}
+    for i, pylon in ipairs(pylons) do
+        pylon_priority[pylon] = i
+    end
+
     for _, actor in pairs(actors) do
         local name = actor:get_skin_name()
         if name:match("BSK_Pyl") then
@@ -228,179 +181,182 @@ function bomber:get_pylons()
     return highest_priority_actor
 end
 
+-- Function to get the locked door if it is present and not in a wave
 function bomber:get_locked_door()
     local actors = actors_manager:get_all_actors()
+    local is_locked, in_wave = false, false
     local door_actor = nil
-    local is_locked = false
-    local in_wave = false
-    local aether = nil
 
     for _, actor in pairs(actors) do
         local name = actor:get_skin_name()
-        if name == "BSK_MapIcon_LockedDoor" then
-            is_locked = true
-        end
-
-        if name == "Hell_Fort_BSK_Door_A_01_Dyn" then
-            door_actor = actor
-        end
-
-        if name == "DGN_Standard_Door_Lock_Sigil_Ancients_Zak_Evil" then
-            in_wave = true
-        end
+        if name == "BSK_MapIcon_LockedDoor" then is_locked = true end
+        if name == "Hell_Fort_BSK_Door_A_01_Dyn" then door_actor = actor end
+        if name == "DGN_Standard_Door_Lock_Sigil_Ancients_Zak_Evil" then in_wave = true end
     end
 
     return not in_wave and is_locked and door_actor
 end
 
-
-local buffs_gathered = {}
-
-function bomber:gather_buffs()
-    local local_player = get_local_player()
-    local buffs = local_player:get_buffs()
-    for _, buff in pairs(buffs) do
-        local buff_id = buff.name_hash
-        if not buffs_gathered[buff_id] then
-            buffs_gathered[buff_id] = true
-            console.print("Got Buff: " .. buff:name() .. ", ID: " .. buff.name_hash)
-        end
-    end
-end
-
+-- Function to get the Aether actor if present
 function bomber:get_aether_actor()
     local actors = actors_manager:get_all_actors()
     for _, actor in pairs(actors) do
         local name = actor:get_skin_name()
-        if name == "BurningAether" or name == "S05_Reputation_Experience_PowerUp_Actor" then
+        if name == "Aether_PowerUp_Actor" or name == "S05_Reputation_Experience_PowerUp_Actor" then
             return actor
         end
     end
 end
 
-function bomber:main_pulse()
-    console.print("Main pulse initiated")
+local move_index = 1
+local reached_target = false
+local target_reach_time = 0
 
-    if get_local_player():is_dead() then
-        console.print("Player is dead, reviving at checkpoint")
-        revive_at_checkpoint()
+
+
+-- Function to move in a defined pattern to specific positions
+function bomber:move_in_pattern()
+    -- Prüfen, ob ein Ziel gefunden wurde
+    if self:get_target() then
+        console.print("Target found, stopping movement in pattern.")
+        return 
     end
 
-    if bomber:check_and_handle_stuck() then
-        return
+    if move_index > #move_positions then
+        move_index = 1
     end
 
-    local world_name = get_current_world():get_name()
-    console.print("Current world name: " .. world_name)
-    
-    if world_name == "Limbo" or world_name:match("Sanctuary") then
-        console.print("In Limbo or Sanctuary, exiting main pulse")
-        return
+    local target_position = move_positions[move_index]
+
+    -- Extract position components for printing
+    local function position_to_string(pos)
+        return string.format("x: %.2f, y: %.2f, z: %.2f", pos:x(), pos:y(), pos:z())
     end
 
-
-
-    local pylon = bomber:get_pylons()
-    if pylon then
-        local aether_actor = bomber:get_aether_actor()
-        if aether_actor then
-            console.print("Fetching Aether")
-            bomber:bomb_to(aether_actor:get_position())
+    if not reached_target then
+        if utils.distance_to(target_position) > 2 then
+            console.print("Moving to position " .. position_to_string(target_position))
+            explorer:set_custom_target(target_position)
+            explorer:move_to_target()
+            target_reach_time = 0
         else
-            console.print("Getting Pylons")
-            if utils.distance_to(pylon) > 2 then
-                console.print("Pylon is far, moving to pylon")
-                --bomber:bomb_to(pylon:get_position())
-                explorer:clear_path_and_target()
-                pathfinder.force_move_raw(pylon:get_position())
-
-            else
-                console.print("Pylon is close, interacting with pylon")
-                interact_object(pylon)
+            if target_reach_time == 3 then 
+               reached_target = true
+               target_reach_time = get_time_since_inject()
+               console.print("Reached target position " .. position_to_string(target_position))
             end
         end
-        console.print("Pylon section completed")
-        wave_start_time = 0
+    else
+        move_index = move_index + 1
+        reached_target = false
+        console.print("Moving to the next position in the pattern.")
+    end
+end
+
+local last_enemy_check_time = 0
+local enemy_check_interval = 0.000001 -- Interval in seconds to check for enemies
+
+-- Main function to handle the bomber's actions based on the current game state
+function bomber:main_pulse()
+    if get_local_player():is_dead() then
+        console.print("Player is dead. Reviving at checkpoint.")
+        revive_at_checkpoint()
+        return
+    end
+
+    local current_time = get_current_time()
+    local world_name = get_current_world():get_name()
+
+    local pylon = bomber:get_pylons()
+
+    
+    if pylon then
+        local aether_actor = bomber:get_aether_actor()
+        
+        if aether_actor then
+            console.print("Targeting Aether actor.")
+            explorer:set_custom_target(aether_actor:get_position())
+            explorer:move_to_target()
+        else
+            console.print("Targeting Pylon and interacting with it.")
+            explorer:set_custom_target(pylon:get_position())
+            explorer:move_to_target()
+            interact_object(pylon)
+        end
+        last_enemy_check_time = current_time
         return
     end
 
     local locked_door = bomber:get_locked_door()
+    
     if locked_door then
-        if tracker.finished_chest_looting then
-            tracker.reset_chest_trackers()
-            console.print("Restaured Trackers")
-        end
-        console.print("Locked door found")
         if utils.distance_to(locked_door) > 2 then
-            console.print("Locked door is far, moving to locked door")
-            bomber:bomb_to(locked_door:get_position())
+            console.print("Moving to locked door position.")
+            explorer:set_custom_target(locked_door:get_position())
+            explorer:move_to_target()
+             
         else
-            console.print("Locked door is close, interacting with locked door")
+            console.print("Interacting with locked door.")
             interact_object(locked_door)
         end
-        console.print("Locked door section completed")
+        last_enemy_check_time = current_time
         return
     end
-    
-      
+
     local target = bomber:get_target()
     if target then
-        console.print("Target found")
-        if utils.distance_to(target) > 1.5 then
-            console.print("Target is far, moving to target")
-            bomber:bomb_to(target:get_position())
+        if utils.distance_to(target) > 0.5 then
+            console.print("Target detected. Moving to target position.")
+            explorer:set_custom_target(target:get_position())
+            explorer:move_to_target()
         else
-            console.print("Target is close, shooting in circle")
+            console.print("Target in range. Performing circular shooting.")
             bomber:shoot_in_circle()
         end
-        console.print("Target section completed")
+        last_enemy_check_time = current_time
         return
     else
-        console.print("No target found")
+        
         if bomber:all_waves_cleared() then
-            console.print("All waves cleared")
             local aether = bomber:get_aether_actor()
             if aether then
-                console.print("Aether Get")
-                bomber:bomb_to(aether:get_position())
+                console.print("All waves cleared. Targeting Aether actor.")
+                explorer:set_custom_target(aether:get_position())
+                explorer:move_to_target()
                 return
             end
 
-            if get_player_position():dist_to(horde_boss_room_position) > 2 then
-                console.print("Moving to horde boss room")
-                bomber:bomb_to(horde_boss_room_position)
+            if get_player_pos():dist_to(horde_boss_room_position) > 2 then
+                console.print("Moving to boss room position.")
+                explorer:set_custom_target(horde_boss_room_position)
+                explorer:move_to_target()
+                 
             else
-                console.print("At horde boss room, shooting in circle")
+                console.print("In boss room. Performing circular shooting.")
                 bomber:shoot_in_circle()
             end
         else
-            console.print("Waves not cleared, moving to horde center position")
-            if get_player_position():dist_to_ignore_z(horde_center_position) > 2 then
-                bomber:bomb_to(horde_center_position)
-            else
-                console.print("At horde center position, shooting in circle")
-                bomber:shoot_in_circle()
-            end
+            console.print("Moving in pattern.")
+            
         end
-        console.print("Wave handling section completed")
     end
-
-    console.print("Main pulse execution completed")
 end
 
+-- Define the task for the Infernal Horde and its execution conditions
+local has_printed_execution_message = false
 
 local task = {
     name = "Infernal Horde",
     shouldExecute = function()
         return utils.player_in_zone("S05_BSK_Prototype02")
-        and not tracker.gold_chest_opened
-        and not tracker.finished_chest_looting 
     end,
     
     Execute = function()
-        tracker.horde_opened = false
+        if not has_printed_execution_message then
+            console.print("Infernal Horde task executing.")
+            has_printed_execution_message = true
+        end
         bomber:main_pulse()
     end
 }
-
 return task

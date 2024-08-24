@@ -1,15 +1,10 @@
 local utils = require "core.utils"
 local enums = require "data.enums"
 local tracker = require "core.tracker"
+local open_chests_task = require "tasks.open_chests"
 
 local function reset_chest_flags()
-    tracker.ga_chest_open_time = 0
-    tracker.ga_chest_opened = false
-    tracker.peasant_chest_open_time = 0
-    tracker.peasant_chest_opening_stopped = false
-    tracker.gold_chest_open_time = 0
-    tracker.gold_chest_opened = false
-    tracker.finished_chest_looting = false
+    open_chests_task:reset()
     tracker.finished_looting_start_time = nil
     console.print("Chest flags reset for new dungeon run")
 end
