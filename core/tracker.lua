@@ -18,9 +18,9 @@ local tracker = {
 
 function tracker.reset_chest_trackers()
     tracker.ga_chest_opened = false
-    tracker.finished_chest_looting = false
     tracker.selected_chest_opened = false
     tracker.gold_chest_opened = false
+    tracker.finished_chest_looting = false
 end
 
 
