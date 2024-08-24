@@ -22,7 +22,7 @@ local open_chests_task = {
     max_attempts = 3,
     
     shouldExecute = function()
-        return utils.player_in_zone("S05_BSK_Prototype02") and (utils.get_chest(enums.chest_types["GOLD"]) ~= nil or not tracker.finished_chest_looting)
+        return utils.player_in_zone("S05_BSK_Prototype02") and (utils.get_chest(enums.chest_types["GOLD"]) or not tracker.finished_chest_looting)
     end,
     
     Execute = function(self)

@@ -30,7 +30,6 @@ exit_horde_task = {
         end
 
         if not tracker.exit_horde_start_time then
-            tracker.finished_chest_looting = true
             console.print("Starting 5-second timer before exiting Horde")
             tracker.exit_horde_start_time = current_time
         end
@@ -38,12 +37,10 @@ exit_horde_task = {
         local elapsed_time = current_time - tracker.exit_horde_start_time
         if elapsed_time >= 10 then
             console.print("10-second timer completed. Resetting all dungeons")
-            reset_all_dungeons()
+            tracker.reset_chest_trackers()
             tracker.exit_horde_start_time = nil
             tracker.exit_horde_completion_time = current_time
             tracker.horde_opened = false
-            tracker.finished_chest_looting = false
-            tracker.gold_chest_opened = false
             tracker.start_dungeon_time = nil
             wave_start_time = 0
             exit_horde_task.delay_start_time = nil  -- Reset the delay timer
