@@ -88,7 +88,8 @@ function bomber:shoot_in_circle()
         local z = player_pos:z() + circle_data.radius * math.sin(angle)
         local y = player_pos:y() + circle_data.height_offset * math.sin(angle)
 
-        pathfinder.force_move_raw(vec3:new(x, y, z))
+        explorer:set_custom_target(vec3:new(x, y, z))
+        explorer:move_to_target()
         circle_data.last_action_time = current_time
         circle_data.current_step = (circle_data.current_step % circle_data.steps) + 1
     end
@@ -226,7 +227,8 @@ function bomber:move_in_pattern()
     if not reached_target then
         if utils.distance_to(target_position) > 2 then
             console.print("Moving to position " .. position_to_string(target_position))
-            pathfinder.force_move_raw(target_position)
+            explorer:set_custom_target(target_position)
+            explorer:move_to_target()
         else
             reached_target = true
             target_reach_time = get_time_since_inject()
@@ -247,7 +249,7 @@ function bomber:move_in_pattern()
     end
 end
 local last_enemy_check_time = 0
-local enemy_check_interval = 8 -- Interval in seconds to check for enemies
+local enemy_check_interval = 0.000001 -- Interval in seconds to check for enemies
 
 -- Main function to handle the bomber's actions based on the current game state
 function bomber:main_pulse()
@@ -268,10 +270,12 @@ function bomber:main_pulse()
         
         if aether_actor then
             console.print("Targeting Aether actor.")
-            pathfinder.force_move_raw(aether_actor:get_position())
+            explorer:set_custom_target(aether_actor:get_position())
+            explorer:move_to_target()
         else
             console.print("Targeting Pylon and interacting with it.")
-            pathfinder.force_move_raw(pylon:get_position())
+            explorer:set_custom_target(pylon:get_position())
+            explorer:move_to_target()
             interact_object(pylon)
         end
         last_enemy_check_time = current_time
@@ -283,7 +287,8 @@ function bomber:main_pulse()
     if locked_door then
         if utils.distance_to(locked_door) > 2 then
             console.print("Moving to locked door position.")
-            pathfinder.force_move_raw(locked_door:get_position())
+            explorer:set_custom_target(locked_door:get_position())
+            explorer:move_to_target()
              
         else
             console.print("Interacting with locked door.")
@@ -297,7 +302,8 @@ function bomber:main_pulse()
     if target then
         if utils.distance_to(target) > 0.5 then
             console.print("Target detected. Moving to target position.")
-            pathfinder.force_move_raw(target:get_position())
+            explorer:set_custom_target(target:get_position())
+            explorer:move_to_target()
         else
             console.print("Target in range. Performing circular shooting.")
             bomber:shoot_in_circle()
@@ -316,13 +322,15 @@ function bomber:main_pulse()
             local aether = bomber:get_aether_actor()
             if aether then
                 console.print("All waves cleared. Targeting Aether actor.")
-                pathfinder.force_move_raw(aether:get_position())
+                explorer:set_custom_target(aether:get_position())
+                explorer:move_to_target()
                 return
             end
 
             if get_player_pos():dist_to(horde_boss_room_position) > 2 then
                 console.print("Moving to boss room position.")
-                pathfinder.force_move_raw(horde_boss_room_position)
+                explorer:set_custom_target(horde_boss_room_position)
+                explorer:move_to_target()
                  
             else
                 console.print("In boss room. Performing circular shooting.")
