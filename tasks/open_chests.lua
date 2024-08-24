@@ -26,14 +26,34 @@ local open_chests_task = {
     state_before_pause = nil,
     
     shouldExecute = function()
-        if tracker.needs_salvage then
+        console.print("shouldExecute check:")
+        local in_correct_zone = utils.player_in_zone("S05_BSK_Prototype02")
+        console.print("  In zone: " .. tostring(in_correct_zone))
+    
+        if not in_correct_zone then
             return false
         end
-        return utils.player_in_zone("S05_BSK_Prototype02") and (utils.get_chest(enums.chest_types["GOLD"]) or not tracker.finished_chest_looting)
+    
+        if tracker.needs_salvage then
+            console.print("  needs_salvage: true")
+            return false
+        end
+    
+        local gold_chest_exists = utils.get_chest(enums.chest_types["GOLD"]) ~= nil
+        console.print("  Gold chest exists: " .. tostring(gold_chest_exists))
+    
+        if not gold_chest_exists then
+            return false
+        end
+    
+        console.print("  finished_chest_looting: " .. tostring(tracker.finished_chest_looting))
+    
+        return not tracker.finished_chest_looting
     end,
     
     Execute = function(self)
         local current_time = get_time_since_inject()
+        console.print("Current state: " .. self.current_state)
 
         if tracker.needs_salvage then
             if self.current_state ~= chest_state.PAUSED_FOR_SALVAGE then
