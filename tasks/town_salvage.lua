@@ -59,7 +59,7 @@ local town_salvage_task = {
 
     teleport_to_town = function(self)
         explorer:clear_path_and_target()
-        teleport_to_waypoint(waypoints_enum.CERRIGAR)
+        teleport_to_waypoint(enums.waypoints.CERRIGAR)
         self.current_state = salvage_state.MOVING_TO_BLACKSMITH
     end,
 
