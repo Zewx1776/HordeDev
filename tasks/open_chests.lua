@@ -174,6 +174,7 @@ local open_chests_task = {
                     end
                 end
                 tracker.finished_chest_looting = true
+                console.print("Set tracker.finished_chest_looting to true due to chest not found")
             end
         end
     end,
@@ -211,6 +212,7 @@ local open_chests_task = {
             if current_chest_index > #chest_order then
                 console.print("All chest types exhausted, finishing task")
                 self.current_state = chest_state.FINISHED
+                tracker.finished_chest_looting = true
                 return
             end
             local next_chest = chest_order[current_chest_index]
@@ -256,6 +258,7 @@ local open_chests_task = {
     
         tracker.finished_chest_looting = true
         tracker.gold_chest_successfully_opened = true
+        console.print("Set tracker.finished_chest_looting to true in finish_chest_opening")
     
         console.print("Chest opening task finished")
         return
