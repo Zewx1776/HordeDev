@@ -698,6 +698,7 @@ end
 
 -- Expose the move_to_target function
 function explorer:move_to_target()
+    console.print("moving to target")
     move_to_target()
 end
 
