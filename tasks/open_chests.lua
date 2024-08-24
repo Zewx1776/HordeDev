@@ -29,7 +29,6 @@ local open_chests_task = {
         local current_time = get_time_since_inject()
         
         if self.current_state == chest_state.FINISHED then
-            self:finish_chest_opening()
             return  -- Exit the function after finishing
         end
         
@@ -59,7 +58,7 @@ local open_chests_task = {
         end
     
         -- If no aether, proceed with chest selection
-        if settings.always_open_ga_chest and not tracker.ga_chest_opened and utils.get_chest(enums.chest_types["GREATER_AFFIX"]) then
+        if settings.always_open_ga_chest and not tracker.ga_chest_opened then
             self.current_chest_type = "GREATER_AFFIX"
         else
             local chest_type_map = {"GEAR", "MATERIALS", "GOLD"}
@@ -122,13 +121,11 @@ local open_chests_task = {
         else
             console.print("Chest not found")
             tracker.finished_chest_looting = true
-            tracker.gold_chest_successfully_opened = true
-            self:try_next_chest()
         end
     end,
 
     open_chest = function(self)
-        if tracker.check_time("chest_opening_time", 1.25) then
+        if tracker.check_time("chest_opening_time", 1) then
             local chest = utils.get_chest(enums.chest_types[self.current_chest_type])
             if chest then
                 local try_open_chest = interact_object(chest)
