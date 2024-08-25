@@ -32,10 +32,10 @@ local move_positions = {
 
 -- Data for circular shooting pattern
 local circle_data = {
-    radius = 30,
-    steps = 15,
-    delay = 0.01,
-    current_step = 1,
+    radius = 90,
+    steps = 20,
+    delay = 3,
+    current_step = 10,
     last_action_time = 0,
     height_offset = 1
 }
@@ -94,7 +94,7 @@ function bomber:shoot_in_circle()
     local player_position = get_player_position()
     
     -- First, navigate to the horde center position
-    if player_position:dist_to(horde_center_position) > 1 then
+    if player_position:dist_to(horde_center_position) > 15 then
         console.print("Moving to horde center position")
         bomber:bomb_to(horde_center_position)
         return
@@ -289,26 +289,40 @@ local target_reach_time = 0
 
 -- Function to move in a defined pattern to specific positions
 function bomber:move_in_pattern()
-    local current_time = get_time_since_inject()
-    if current_time - circle_data.last_action_time >= circle_data.delay then
-        local player_position = get_player_position()
-        local px, py, pz = player_position:x(), player_position:y(), player_position:z()
-        local angle = (circle_data.current_step / circle_data.steps) * (2 * math.pi)
+    -- Prüfen, ob ein Ziel gefunden wurde
+    if self:get_target() then
+        console.print("Target found, stopping movement in pattern.")
+        return 
+    end
 
-        -- Calculate horizontal movement
-        local x = px + circle_data.radius * math.cos(angle)
-        local z = pz + circle_data.radius * math.sin(angle)
+    if move_index > #move_positions then
+        move_index = 1
+    end
 
-        -- Calculate vertical movement (sinusoidal pattern)
-        local y = py + circle_data.height_offset * math.sin(angle)
+    local target_position = move_positions[move_index]
 
-        local new_position = vec3:new(x, y, z)
-        pathfinder.force_move_raw(new_position)
-        circle_data.last_action_time = current_time
-        circle_data.current_step = circle_data.current_step + 1
-        if circle_data.current_step > circle_data.steps then
-            circle_data.current_step = 1 -- Reset to start a new circle
+    -- Extract position components for printing
+    local function position_to_string(pos)
+        return string.format("x: %.2f, y: %.2f, z: %.2f", pos:x(), pos:y(), pos:z())
+    end
+
+    if not reached_target then
+        if utils.distance_to(target_position) > 2 then
+            console.print("Moving to position " .. position_to_string(target_position))
+            explorer:set_custom_target(target_position)
+            explorer:move_to_target()
+            target_reach_time = 0
+        else
+            if target_reach_time == 3 then 
+               reached_target = true
+               target_reach_time = get_time_since_inject()
+               console.print("Reached target position " .. position_to_string(target_position))
+            end
         end
+    else
+        move_index = move_index + 1
+        reached_target = false
+        console.print("Moving to the next position in the pattern.")
     end
 end
 
@@ -389,7 +403,7 @@ function bomber:main_pulse()
             end
         else
             console.print("shoot in circle Moving in pattern.")
-            bomber:shoot_in_circle()
+            bomber:move_in_pattern()
             
         end
     end
