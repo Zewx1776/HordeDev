@@ -32,8 +32,8 @@ local move_positions = {
 
 -- Data for circular shooting pattern
 local circle_data = {
-    radius = 10,
-    steps = 1,
+    radius = 30,
+    steps = 15,
     delay = 0.01,
     current_step = 1,
     last_action_time = 0,
@@ -91,14 +91,27 @@ end
 -- Function to move in a circular pattern and shoot
 function bomber:shoot_in_circle()
     local current_time = get_time_since_inject()
+    local player_position = get_player_position()
+    
+    -- First, navigate to the horde center position
+    if player_position:dist_to(horde_center_position) > 1 then
+        console.print("Moving to horde center position")
+        bomber:bomb_to(horde_center_position)
+        return
+    end
+
+    -- Once at the center, perform the circle shooting logic
     if current_time - circle_data.last_action_time >= circle_data.delay then
-        local center_x, center_y, center_z = 9.204102, 8.915039, 0.000000
+        local center_x, center_y, center_z = horde_center_position:x(), horde_center_position:y(), horde_center_position:z()
         local angle = (circle_data.current_step / circle_data.steps) * (2 * math.pi)
+        
         local x = center_x + circle_data.radius * math.cos(angle)
-        local z = center_z + circle_data.radius * math.sin(angle)
-        local y = center_y + circle_data.height_offset * math.sin(angle)
+        local y = center_y + circle_data.radius * math.sin(angle)
+        local z = center_z + circle_data.height_offset * math.sin(angle)
+        
         local new_position = vec3:new(x, y, z)
-        pathfinder.force_move_raw(new_position)
+        bomber:bomb_to(new_position)
+        
         circle_data.last_action_time = current_time
         circle_data.current_step = circle_data.current_step + 1
         if circle_data.current_step > circle_data.steps then
@@ -106,7 +119,6 @@ function bomber:shoot_in_circle()
         end
     end
 end
-
 
 function bomber:get_target()
     local closest_spire = nil
