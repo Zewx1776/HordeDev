@@ -85,22 +85,25 @@ local town_salvage_task = {
         end
     end,
     
+    teleport_to_town = function(self)
+        console.print("Teleporting to town")
+        explorer:clear_path_and_target()
+        teleport_to_waypoint(enums.waypoints.CERRIGAR)
+        self.teleport_start_time = get_time_since_inject()
+        console.print("Teleport command issued")
+    end,
+    
     handle_teleporting = function(self)
-        local current_time = get_time_since_inject()
-        local time_elapsed = current_time - self.teleport_start_time
-        
-        console.print("Teleport time elapsed: " .. time_elapsed)
-        
-        local current_zone = get_current_world():get_current_zone_name()
-        console.print("Current zone: " .. tostring(current_zone))
-        
-        if current_zone:find("Cerrigar") or utils.player_in_zone("Scos_Cerrigar") or time_elapsed > 5 then
-            console.print("Teleport complete or timeout reached, moving to blacksmith")
-            self.current_state = salvage_state.MOVING_TO_BLACKSMITH
-            self.teleport_attempts = 0 -- Reset attempts counter
-        else
-            if time_elapsed > self.teleport_wait_time then
-                console.print("Teleport taking too long, retrying...")
+        if tracker.check_time("teleport_check", 5) then
+            local current_zone = get_current_world():get_current_zone_name()
+            console.print("Current zone: " .. tostring(current_zone))
+            
+            if current_zone:find("Cerrigar") or utils.player_in_zone("Scos_Cerrigar") then
+                console.print("Teleport complete, moving to blacksmith")
+                self.current_state = salvage_state.MOVING_TO_BLACKSMITH
+                self.teleport_attempts = 0 -- Reset attempts counter
+            else
+                console.print("Teleport unsuccessful, retrying...")
                 self.teleport_attempts = (self.teleport_attempts or 0) + 1
                 
                 if self.teleport_attempts >= self.max_teleport_attempts then
@@ -110,18 +113,8 @@ local town_salvage_task = {
                 end
                 
                 self:teleport_to_town()
-            else
-                console.print("Still teleporting, waiting...")
             end
         end
-    end,
-
-    teleport_to_town = function(self)
-        console.print("Teleporting to town")
-        explorer:clear_path_and_target()
-        teleport_to_waypoint(enums.waypoints.CERRIGAR)
-        self.teleport_start_time = get_time_since_inject()
-        console.print("Teleport command issued")
     end,
 
     move_to_blacksmith = function(self)
@@ -149,9 +142,10 @@ local town_salvage_task = {
         console.print("Interacting with blacksmith")
         local blacksmith = utils.get_blacksmith()
         if blacksmith then
-            interact_vendor(blacksmith)
-            if tracker.check_time("blacksmith_interaction", 5) then
-                console.print("Interaction complete, moving to salvage")
+            if tracker.check_time("blacksmith_interaction", 2) then
+                interact_vendor(blacksmith)
+                console.print("Interacted with blacksmith, waiting 5 seconds before salvaging")
+                self.interaction_time = get_time_since_inject()
                 self.current_state = salvage_state.SALVAGING
             end
         else
@@ -159,34 +153,37 @@ local town_salvage_task = {
             self.current_state = salvage_state.MOVING_TO_BLACKSMITH
         end
     end,
-
+    
     salvage_items = function(self)
         console.print("Salvaging items")
         
-        -- Interact with blacksmith (this should already be done in the previous state)
-        
-        -- Salvage all items
-        loot_manager.salvage_all_items()
-        
-        -- Use tracker.check_time to wait and check item count
-        if tracker.check_time("salvage_completion", 2) then
-            local item_count = get_local_player():get_item_count()
-            console.print("Current item count: " .. item_count)
+        if not self.interaction_time or get_time_since_inject() - self.interaction_time >= 5 then
+            if tracker.check_time("salvage_action", 2) then
+                loot_manager.salvage_all_items()
+                console.print("Salvage action performed, waiting 2 seconds before checking results")
+            end
             
-            if item_count <= 15 then
-                tracker.has_salvaged = true
-                console.print("Salvage complete, item count is 15 or less. Moving to portal")
-                self.current_state = salvage_state.MOVING_TO_PORTAL
-            else
-                console.print("Item count is still above 15, retrying salvage")
-                self.current_retries = self.current_retries + 1
-                if self.current_retries >= self.max_retries then
-                    console.print("Max retries reached. Resetting task.")
-                    self:reset()
+            if tracker.check_time("salvage_completion", 2) then
+                local item_count = get_local_player():get_item_count()
+                console.print("Current item count: " .. item_count)
+                
+                if item_count <= 15 then
+                    tracker.has_salvaged = true
+                    console.print("Salvage complete, item count is 15 or less. Moving to portal")
+                    self.current_state = salvage_state.MOVING_TO_PORTAL
                 else
-                    self.current_state = salvage_state.INTERACTING_WITH_BLACKSMITH
+                    console.print("Item count is still above 15, retrying salvage")
+                    self.current_retries = self.current_retries + 1
+                    if self.current_retries >= self.max_retries then
+                        console.print("Max retries reached. Resetting task.")
+                        self:reset()
+                    else
+                        self.current_state = salvage_state.INTERACTING_WITH_BLACKSMITH
+                    end
                 end
             end
+        else
+            console.print("Waiting for 5-second delay after blacksmith interaction")
         end
     end,
 
