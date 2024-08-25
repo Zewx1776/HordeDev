@@ -87,19 +87,23 @@ function bomber:all_waves_cleared()
     return not (locked_door_found or enemy_found)  -- Wellen sind gecleared, wenn weder Tür noch Feind gefunden
 end
 
+
 -- Function to move in a circular pattern and shoot
 function bomber:shoot_in_circle()
     local current_time = get_time_since_inject()
     if current_time - circle_data.last_action_time >= circle_data.delay then
-        local player_pos = get_player_pos()
+        local center_x, center_y, center_z = 9.204102, 8.915039, 0.000000
         local angle = (circle_data.current_step / circle_data.steps) * (2 * math.pi)
-        local x = player_pos:x() + circle_data.radius * math.cos(angle)
-        local z = player_pos:z() + circle_data.radius * math.sin(angle)
-        local y = player_pos:y() + circle_data.height_offset * math.sin(angle)
-        explorer:set_custom_target(vec3:new(x, y, z))
-        explorer:move_to_target()
+        local x = center_x + circle_data.radius * math.cos(angle)
+        local z = center_z + circle_data.radius * math.sin(angle)
+        local y = center_y + circle_data.height_offset * math.sin(angle)
+        local new_position = vec3:new(x, y, z)
+        pathfinder.force_move_raw(new_position)
         circle_data.last_action_time = current_time
-        circle_data.current_step = (circle_data.current_step % circle_data.steps) + 1
+        circle_data.current_step = circle_data.current_step + 1
+        if circle_data.current_step > circle_data.steps then
+            circle_data.current_step = 1 -- Reset to start a new circle
+        end
     end
 end
 
