@@ -41,7 +41,6 @@ local circle_data = {
 }
 
 function bomber:bomb_to(pos)
-    --explorer:clear_path_and_target()
     explorer:set_custom_target(pos)
     explorer:move_to_target()
 end
@@ -106,12 +105,19 @@ end
 
 
 function bomber:get_target()
-    local spire = nil
-    local mass = nil
-    local membrane = nil
-    local hellborne = nil
-    local aether = nil
-    local monster = nil
+    local closest_spire = nil
+    local closest_mass = nil
+    local closest_membrane = nil
+    local closest_hellborne = nil
+    local closest_aether = nil
+    local closest_monster = nil
+
+    local closest_spire_distance = math.huge
+    local closest_mass_distance = math.huge
+    local closest_membrane_distance = math.huge
+    local closest_hellborne_distance = math.huge
+    local closest_aether_distance = math.huge
+    local closest_monster_distance = math.huge
 
     local actors = actors_manager:get_all_actors()
     for _, actor in pairs(actors) do
@@ -121,34 +127,56 @@ function bomber:get_target()
         local is_special = actor:is_boss() or actor:is_champion() or actor:is_elite()
 
         if not evade.is_dangerous_position(a_pos) then
-            if name:match("Soulspire") and health > 1 then
-                spire = actor
-            end
+            local distance_to_actor = utils.distance_to(a_pos)
 
-            if name == "BurningAether" then
-                aether = actor
+            if name:match("Soulspire") and health > 1 then
+                if distance_to_actor < closest_spire_distance then
+                    closest_spire_distance = distance_to_actor
+                    closest_spire = actor
+                end
             end
 
             if (name:match("Mass") or name:match("Zombie")) and health > 1 then
-                mass = actor
+                if distance_to_actor < closest_mass_distance then
+                    closest_mass_distance = distance_to_actor
+                    closest_mass = actor
+                end
             end
 
             if name == "MarkerLocation_BSK_Occupied" then
-                membrane = actor
+                if distance_to_actor < closest_membrane_distance then
+                    closest_membrane_distance = distance_to_actor
+                    closest_membrane = actor
+                end
             end
 
             if is_special then
-                hellborne = actor
+                if distance_to_actor < closest_hellborne_distance then
+                    closest_hellborne_distance = distance_to_actor
+                    closest_hellborne = actor
+                end
+            end
+
+            if name == "BurningAether" then
+                if distance_to_actor < closest_aether_distance then
+                    closest_aether_distance = distance_to_actor
+                    closest_aether = actor
+                end
             end
 
             if target_selector.is_valid_enemy(actor) then
-                monster = actor
+                if distance_to_actor < closest_monster_distance then
+                    closest_monster_distance = distance_to_actor
+                    closest_monster = actor
+                end
             end
         end
     end
 
-    return spire or hellborne or mass or membrane or aether or monster
+    return closest_spire or closest_hellborne or closest_mass or closest_membrane or closest_aether or closest_monster
 end
+
+
 
 -- List of pylons with their priorities
 local pylons = {
@@ -302,7 +330,6 @@ function bomber:main_pulse()
     end
 
     local locked_door = bomber:get_locked_door()
-    
     if locked_door then
         if utils.distance_to(locked_door) > 2 then
             console.print("Moving to locked door position.")
