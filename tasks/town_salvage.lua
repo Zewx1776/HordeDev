@@ -22,10 +22,13 @@ local town_salvage_task = {
     max_retries = 5,
     current_retries = 0,
     max_teleport_attempts = 5,
-    teleport_wait_time = 20,
+    teleport_wait_time = 30,
 
     shouldExecute = function()
-        return (get_local_player():get_item_count() >= 25 and settings.loot_modes == gui.loot_modes_enum.SALVAGE)
+        local gold_chest_exists = utils.get_chest(enums.chest_types["GOLD"]) ~= nil
+        return (get_local_player():get_item_count() >= 25 and 
+                settings.loot_modes == gui.loot_modes_enum.SALVAGE and
+                gold_chest_exists)
     end,
 
     Execute = function(self)
@@ -73,12 +76,20 @@ local town_salvage_task = {
     
     handle_teleporting = function(self)
         local current_time = get_time_since_inject()
+        local time_elapsed = current_time - self.teleport_start_time
+        
+        console.print("Teleport time elapsed: " .. time_elapsed)
+        
+        -- Use get_current_world():get_current_zone_name() to get the current zone
+        local current_zone = get_current_world():get_current_zone_name()
+        console.print("Current zone: " .. tostring(current_zone))
+        
         if utils.player_in_zone("Scos_Cerrigar") then
             console.print("Teleport complete, moving to blacksmith")
             self.current_state = salvage_state.MOVING_TO_BLACKSMITH
             self.teleport_attempts = 0 -- Reset attempts counter
         else
-            if current_time - self.teleport_start_time > self.teleport_wait_time then
+            if time_elapsed > self.teleport_wait_time then
                 console.print("Teleport taking too long, retrying...")
                 self.teleport_attempts = (self.teleport_attempts or 0) + 1
                 
@@ -141,18 +152,23 @@ local town_salvage_task = {
 
     salvage_items = function(self)
         console.print("Salvaging items")
-        local initial_item_count = get_local_player():get_item_count()
+        
+        -- Interact with blacksmith (this should already be done in the previous state)
+        
+        -- Salvage all items
         loot_manager.salvage_all_items()
         
+        -- Use tracker.check_time to wait and check item count
         if tracker.check_time("salvage_completion", 2) then
-            local final_item_count = get_local_player():get_item_count()
+            local item_count = get_local_player():get_item_count()
+            console.print("Current item count: " .. item_count)
             
-            if final_item_count < initial_item_count then
+            if item_count <= 15 then
                 tracker.has_salvaged = true
-                console.print("Salvage complete, moving to portal")
+                console.print("Salvage complete, item count is 15 or less. Moving to portal")
                 self.current_state = salvage_state.MOVING_TO_PORTAL
             else
-                console.print("Salvage may have failed, retrying")
+                console.print("Item count is still above 15, retrying salvage")
                 self.current_retries = self.current_retries + 1
                 if self.current_retries >= self.max_retries then
                     console.print("Max retries reached. Resetting task.")
