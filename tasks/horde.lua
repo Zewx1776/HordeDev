@@ -285,45 +285,68 @@ local move_index = 1
 local reached_target = false
 local target_reach_time = 0
 
-
+-- Extract position components for printing
+local function position_to_string(pos)
+    return string.format("x: %.2f, y: %.2f, z: %.2f", pos:x(), pos:y(), pos:z())
+end
 
 -- Function to move in a defined pattern to specific positions
 function bomber:move_in_pattern()
+    console.print("Starting move_in_pattern function")
+
     -- Prüfen, ob ein Ziel gefunden wurde
     if self:get_target() then
         console.print("Target found, stopping movement in pattern.")
         return 
     end
 
+    console.print("Current move_index: " .. tostring(move_index))
+    console.print("Total positions: " .. tostring(#move_positions))
+
     if move_index > #move_positions then
         move_index = 1
+        console.print("Reset move_index to 1")
     end
 
     local target_position = move_positions[move_index]
+    console.print("Current target position: " .. position_to_string(target_position))
 
     -- Extract position components for printing
     local function position_to_string(pos)
         return string.format("x: %.2f, y: %.2f, z: %.2f", pos:x(), pos:y(), pos:z())
     end
 
+    local player_pos = get_player_position()
+    console.print("Current player position: " .. position_to_string(player_pos))
+
+    local distance_to_target = utils.distance_to(target_position)
+    console.print("Distance to target: " .. tostring(distance_to_target))
+
     if not reached_target then
-        if utils.distance_to(target_position) > 2 then
+        if distance_to_target > 2 then
             console.print("Moving to position " .. position_to_string(target_position))
             explorer:set_custom_target(target_position)
             explorer:move_to_target()
+            console.print("Move command issued")
             target_reach_time = 0
         else
+            console.print("Close to target. target_reach_time: " .. tostring(target_reach_time))
             if target_reach_time == 3 then 
                reached_target = true
                target_reach_time = get_time_since_inject()
                console.print("Reached target position " .. position_to_string(target_position))
+            else
+               target_reach_time = target_reach_time + 1
+               console.print("Incrementing target_reach_time to " .. tostring(target_reach_time))
             end
         end
     else
         move_index = move_index + 1
         reached_target = false
-        console.print("Moving to the next position in the pattern.")
+        console.print("Moving to the next position in the pattern. New move_index: " .. tostring(move_index))
     end
+
+    console.print("Ending move_in_pattern function")
 end
 
 local last_enemy_check_time = 0
