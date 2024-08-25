@@ -141,10 +141,27 @@ local town_salvage_task = {
 
     salvage_items = function(self)
         console.print("Salvaging items")
+        local initial_item_count = get_local_player():get_item_count()
         loot_manager.salvage_all_items()
-        tracker.has_salvaged = true
-        console.print("Salvage complete, moving to portal")
-        self.current_state = salvage_state.MOVING_TO_PORTAL
+        
+        if tracker.check_time("salvage_completion", 2) then
+            local final_item_count = get_local_player():get_item_count()
+            
+            if final_item_count < initial_item_count then
+                tracker.has_salvaged = true
+                console.print("Salvage complete, moving to portal")
+                self.current_state = salvage_state.MOVING_TO_PORTAL
+            else
+                console.print("Salvage may have failed, retrying")
+                self.current_retries = self.current_retries + 1
+                if self.current_retries >= self.max_retries then
+                    console.print("Max retries reached. Resetting task.")
+                    self:reset()
+                else
+                    self.current_state = salvage_state.INTERACTING_WITH_BLACKSMITH
+                end
+            end
+        end
     end,
 
     move_to_portal = function(self)
