@@ -25,10 +25,20 @@ local town_salvage_task = {
     teleport_wait_time = 30,
 
     shouldExecute = function()
+        local player = get_local_player()
+        local item_count = player:get_item_count()
+        local in_cerrigar = utils.player_in_zone("Scos_Cerrigar")
         local gold_chest_exists = utils.get_chest(enums.chest_types["GOLD"]) ~= nil
-        return (get_local_player():get_item_count() >= 25 and 
-                settings.loot_modes == gui.loot_modes_enum.SALVAGE and
-                gold_chest_exists)
+    
+        -- If we're already in Cerrigar, continue the salvage process regardless of the gold chest
+        if in_cerrigar then
+            return item_count >= 25 and settings.loot_modes == gui.loot_modes_enum.SALVAGE
+        end
+    
+        -- If we're not in Cerrigar, we need both high item count and a gold chest to start
+        return item_count >= 25 and 
+               settings.loot_modes == gui.loot_modes_enum.SALVAGE and
+               gold_chest_exists
     end,
 
     Execute = function(self)
@@ -67,6 +77,7 @@ local town_salvage_task = {
             self.teleport_start_time = get_time_since_inject()
             self.teleport_attempts = 0
             self:teleport_to_town()
+            tracker.needs_salvage = true
             console.print("Player not in Cerrigar, initiating teleport")
         else
             self.current_state = salvage_state.MOVING_TO_BLACKSMITH
@@ -80,12 +91,11 @@ local town_salvage_task = {
         
         console.print("Teleport time elapsed: " .. time_elapsed)
         
-        -- Use get_current_world():get_current_zone_name() to get the current zone
         local current_zone = get_current_world():get_current_zone_name()
         console.print("Current zone: " .. tostring(current_zone))
         
-        if utils.player_in_zone("Scos_Cerrigar") then
-            console.print("Teleport complete, moving to blacksmith")
+        if current_zone:find("Cerrigar") or utils.player_in_zone("Scos_Cerrigar") or time_elapsed > 5 then
+            console.print("Teleport complete or timeout reached, moving to blacksmith")
             self.current_state = salvage_state.MOVING_TO_BLACKSMITH
             self.teleport_attempts = 0 -- Reset attempts counter
         else
