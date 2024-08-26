@@ -31,7 +31,10 @@ local enums = {
         MATERIALS = "BSK_UniqueOpChest_Materials",
         GOLD = "BSK_UniqueOpChest_Gold",
         GREATER_AFFIX = "BSK_UniqueOpChest_GreaterAffix"
-    }
+    },
+    waypoints = {
+        CERRIGAR = 0x76D58,
+    },
 }
 
 return enums

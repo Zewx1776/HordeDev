@@ -53,8 +53,8 @@ function gui.render()
     if gui.elements.settings_tree:push("Settings") then
         gui.elements.melee_logic:render("Melee", "Do we need to move into Melee?")
         gui.elements.elite_only_toggle:render("Elite Only", "Do we only want to seek out elites in the Pit?")
-        gui.elements.loot_toggle:render("Enable Looting", "Toggle looting on/off")        
-        gui.elements.loot_modes:render("Loot Modes", gui.loot_modes_options, "Nothing and Stash will get you stuck for now")
+        -- gui.elements.loot_toggle:render("Enable Looting", "Toggle looting on/off")        
+        -- gui.elements.loot_modes:render("Loot Modes", gui.loot_modes_options, "Nothing and Stash will get you stuck for now")
         gui.elements.path_angle_slider:render("Path Angle", "Adjust the angle for path filtering (0-360 degrees)")
         
         -- Updated chest type selector to use the new enum structure
