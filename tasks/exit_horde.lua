@@ -64,7 +64,9 @@ exit_horde_task = {
         if elapsed_time >= 10 then
             console.print("10-second timer completed. Resetting all dungeons")
             reset_all_dungeons()
+            tracker.clear_key("aether_drop_wait")
             tracker.victory_lap = false
+            tracker.locked_door_found = false
             tracker.exit_horde_start_time = nil
             tracker.exit_horde_completion_time = current_time
             tracker.horde_opened = false

@@ -16,15 +16,22 @@ local tracker = {
     wave_start_time = 0,
     needs_salvage = false,
     victory_lap = false,
+    locked_door_found = false;
 }
 
 function tracker.check_time(key, delay)
     local current_time = get_time_since_inject()
-    if not tracker[key] or current_time - tracker[key] >= delay then
+    if not tracker[key] then
         tracker[key] = current_time
+    end
+    if current_time - tracker[key] >= delay then
         return true
     end
     return false
+end
+
+function tracker.clear_key(key)
+    tracker[key] = nil
 end
 
 return tracker

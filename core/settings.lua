@@ -18,6 +18,7 @@ function settings:update_settings()
     settings.path_angle = gui.elements.path_angle_slider:get()
     settings.selected_chest_type = gui.elements.chest_type_selector:get()
     settings.always_open_ga_chest = gui.elements.always_open_ga_chest:get()
+    settings.loot_mothers_gift = gui.elements.loot_mothers_gift:get()
 end
 
 return settings

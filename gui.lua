@@ -43,6 +43,7 @@ gui.elements = {
     path_angle_slider = slider_int:new(0, 360, 10, get_hash("path_angle_slider")), -- 10 is a default value
     chest_type_selector = combo_box:new(0, get_hash("chest_type_selector")),
     always_open_ga_chest = create_checkbox("always_open_ga_chest"),
+    loot_mothers_gift = create_checkbox("loot_mothers_gift"),
 }
 
 function gui.render()
@@ -60,6 +61,7 @@ function gui.render()
         -- Updated chest type selector to use the new enum structure
         gui.elements.chest_type_selector:render("Chest Type", gui.chest_types_options, "Select the type of chest to open")
         gui.elements.always_open_ga_chest:render("Always Open GA Chest", "Toggle to always open Greater Affix chest when available")
+        gui.elements.loot_mothers_gift:render("Loot Mother's Gift", "Toggle to loot Mother's Gift")
         
         gui.elements.settings_tree:pop()
     end

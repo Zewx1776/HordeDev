@@ -4,6 +4,7 @@ local settings = require "core.settings"
 local navigation = require "core.navigation"
 local tracker = require "core.tracker"
 local explorer = require "core.explorer"
+local pylons = require "data.pylons"
 tracker.horde_opened = false  -- For start_dungeon again, after dying and exit horde
 
 -- Define the bomber object with its states and tasks
@@ -50,7 +51,6 @@ end
 -- Function to check if all waves are cleared
 function bomber:all_waves_cleared()
     local actors = actors_manager:get_all_actors()
-    local locked_door_found = false
     local enemy_found = false
 
     -- Zuerst nach Gegnern suchen
@@ -61,21 +61,12 @@ function bomber:all_waves_cleared()
         end
     end
 
-    -- Wenn kein Gegner gefunden wurde, nach verschlossenen Türen suchen
-    if not enemy_found then
-        for _, actor in pairs(actors) do
-            if actor:get_skin_name() == "BSK_MapIcon_LockedDoor" then
-                locked_door_found = true
-                break  -- Schleife beenden, sobald eine verschlossene Tür gefunden wurde
-            end
-        end
+    -- If no enemy and found locked door
+    if not enemy_found and bomber:get_locked_door() then
+        tracker.locked_door_found = true
     end
-
-    if not enemy_found and locked_door_found then
-        bomber:move_in_pattern()
-    end
-
-    return not (locked_door_found or enemy_found)  -- Wellen sind gecleared, wenn weder Tür noch Feind gefunden
+    -- wave considered as cleared when found door or no enemies
+    return tracker.locked_door_found or not enemy_found 
 end
 
 
@@ -183,37 +174,6 @@ function bomber:get_target()
     return closest_spire or closest_hellborne or closest_mass or closest_membrane or closest_aether or closest_monster
 end
 
-
-
--- List of pylons with their priorities
-local pylons = {
-    "SkulkingHellborne",
-    "SurgingHellborne",
-    "RagingHellfire",
-    "MeteoricHellborne",
-    "EmpoweredHellborne",
-    "InvigoratingHellborne",
-    "BlisteringHordes",
-    "SurgingElites",
-    "ThrivingMasses",
-    "GestatingMasses",
-    "EmpoweredMasses",
-    "EmpoweredElites",
-    "IncreasedEvadeCooldown",
-    "IncreasedPotionCooldown",
-    "EmpoweredCouncil",
-    "ReduceAllResistance",
-    "DeadlySpires",
-    "UnstoppableElites",
-    "CorruptingSpires",
-    "UnstableFiends",
-    "AetherRush",
-    "EnergizingMasses",
-    "GreedySpires",
-    "InfernalLords",
-    "InfernalStalker",
-}
-
 -- Function to get the highest priority pylon from the list
 function bomber:get_pylons()
     if not pylons or #pylons == 0 then
@@ -261,17 +221,6 @@ function bomber:get_locked_door()
     return not in_wave and is_locked and door_actor
 end
 
--- Function to get the Aether actor if present
-function bomber:get_aether_actor()
-    local actors = actors_manager:get_all_actors()
-    for _, actor in pairs(actors) do
-        local name = actor:get_skin_name()
-        if name == "Aether_PowerUp_Actor" or name == "S05_Reputation_Experience_PowerUp_Actor" then
-            return actor
-        end
-    end
-end
-
 local move_index = 1
 local reached_target = false
 local target_reach_time = 0
@@ -282,7 +231,9 @@ local function position_to_string(pos)
 end
 
 -- Function to move in a defined pattern to specific positions
-function bomber:move_in_pattern(move_positions)
+-- Now can pass in specific vector tables for it to move
+-- run_victory_lap is for wave completion to check for aether
+function bomber:move_in_pattern(move_positions, run_victory_lap)
     move_positions = move_positions or {
         horde_center_position,
         horde_left_position,     -- From Middle to Left side 
@@ -296,7 +247,7 @@ function bomber:move_in_pattern(move_positions)
     console.print("Starting move_in_pattern function")
 
     -- Prüfen, ob ein Ziel gefunden wurde
-    if self:get_target() then
+    if bomber:get_target() then
         console.print("Target found, stopping movement in pattern.")
         return 
     end
@@ -305,7 +256,9 @@ function bomber:move_in_pattern(move_positions)
     console.print("Total positions: " .. tostring(#move_positions))
 
     if move_index > #move_positions then
-        tracker.victory_lap = true
+        if run_victory_lap then
+            tracker.victory_lap = true
+        end
         move_index = 1
         console.print("Reset move_index to 1")
     end
@@ -367,7 +320,9 @@ function bomber:main_pulse()
 
     local pylon = bomber:get_pylons()    
     if pylon then
-        local aether_actor = bomber:get_aether_actor()
+        -- reset move index on new wave
+        move_index = 1
+        local aether_actor = utils.get_aether_actor()
         if aether_actor then
             console.print("Targeting Aether actor.")
             bomber:bomb_to(aether_actor:get_position())
@@ -379,19 +334,6 @@ function bomber:main_pulse()
                 console.print("interacting with pylon")
                 interact_object(pylon)
             end
-        end
-        last_enemy_check_time = current_time
-        return
-    end
-
-    local locked_door = bomber:get_locked_door()
-    if locked_door then
-        if utils.distance_to(locked_door) > 2 then
-            console.print("Moving to locked door position.")
-            bomber:bomb_to(locked_door:get_position())             
-        else
-            console.print("Interacting with locked door.")
-            interact_object(locked_door)
         end
         last_enemy_check_time = current_time
         return
@@ -409,44 +351,52 @@ function bomber:main_pulse()
         end
         last_enemy_check_time = current_time
         return
-    else
-        
-        if bomber:all_waves_cleared() then
-            local aether = bomber:get_aether_actor()
-
-            -- clockwise rotation to check stray aether
-            local positions = {
-                horde_right_position,
-                horde_bottom_position,
-                horde_left_position,
-                horde_center_position
-            }
-            
-            if aether then
-                console.print("All waves cleared. Targeting Aether actor.")
-                bomber:bomb_to(aether:get_position())
-                return
-            end
-
-            -- do a victory_lap before moving to boss
-            if not tracker.victory_lap then
-                console.print("Doing a victory lap.")
-                bomber:move_in_pattern(positions)
-                return
-            end
-
-            if get_player_pos():dist_to(horde_boss_room_position) > 2 then
-                console.print("Moving to boss room position.")
-                bomber:bomb_to(horde_boss_room_position)
-            else
-                console.print("In boss room. Performing circular shooting.")
-                bomber:shoot_in_circle()
-            end
-        else
-            console.print("shoot in circle Moving in pattern.")
-            bomber:move_in_pattern()
-            
+    elseif bomber:all_waves_cleared() then
+        local aether = utils.get_aether_actor()
+        if aether then
+            console.print("All waves cleared. Targeting Aether actor.")
+            bomber:bomb_to(aether:get_position())
+            return
         end
+
+        -- do a victory_lap before moving to boss
+        -- clockwise rotation to check stray aether
+        local positions = {
+            horde_center_position,
+            horde_right_position,
+            horde_bottom_position,
+            horde_left_position,
+            horde_center_position,
+        }
+        if not tracker.victory_lap then
+            console.print("Doing a victory lap.")
+            bomber:move_in_pattern(positions, true)
+            return
+        end
+
+        if get_player_pos():dist_to(horde_boss_room_position) > 2 then
+            console.print("Moving to boss room position.")
+            bomber:bomb_to(horde_boss_room_position)
+        else
+            console.print("In boss room. Performing circular shooting.")
+            bomber:shoot_in_circle()
+        end
+    else
+        console.print("shoot in circle Moving in pattern.")
+        bomber:move_in_pattern()
+    end
+
+    local locked_door = bomber:get_locked_door()
+    if locked_door then
+        if utils.distance_to(locked_door) > 2 then
+            console.print("Moving to locked door position.")
+            bomber:bomb_to(locked_door:get_position())             
+        else
+            console.print("Interacting with locked door.")
+            interact_object(locked_door)
+        end
+        last_enemy_check_time = current_time
+        return
     end
 end
 

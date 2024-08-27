@@ -91,9 +91,12 @@ local open_chests_task = {
     end,
 
     init_chest_opening = function(self)
-        -- First, check for aether
+        -- First, wait 6 seconds for all aether to drop from boss and check for aether
         local aether_bomb = utils.get_aether_actor()
         if aether_bomb then
+            if not tracker.check_time("aether_drop_wait", 6) then
+                return
+            end
             self.current_state = chest_state.MOVING_TO_AETHER
             return
         end
