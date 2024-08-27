@@ -94,6 +94,8 @@ local open_chests_task = {
         -- First, wait 6 seconds for all aether to drop from boss and check for aether
         local aether_bomb = utils.get_aether_actor()
         if aether_bomb then
+            -- Boss dead and dropping aether
+            tracker.boss_killed = true
             if not tracker.check_time("aether_drop_wait", 6) then
                 return
             end

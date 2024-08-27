@@ -16,7 +16,8 @@ local tracker = {
     wave_start_time = 0,
     needs_salvage = false,
     victory_lap = false,
-    locked_door_found = false;
+    locked_door_found = false,
+    boss_killed = false,
 }
 
 function tracker.check_time(key, delay)

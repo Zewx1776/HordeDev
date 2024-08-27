@@ -340,7 +340,9 @@ function bomber:main_pulse()
     end
 
     local target = bomber:get_target()
-    if target then
+    if tracker.boss_killed then
+        return
+    elseif target then
         local name = target:get_skin_name()
         if utils.distance_to(target) > 1.5 then
             console.print("Moving to target: " .. name)  -- Print target name
