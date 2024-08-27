@@ -32,13 +32,18 @@ local move_positions = {
 
 -- Data for circular shooting pattern
 local circle_data = {
-    radius = 12,
-    steps = 6,
-    delay = 0.01,
-    current_step = 1,
+    radius = 90,
+    steps = 20,
+    delay = 3,
+    current_step = 10,
     last_action_time = 0,
     height_offset = 1
 }
+
+function bomber:bomb_to(pos)
+    explorer:set_custom_target(pos)
+    explorer:move_to_target()
+end
 
 -- Function to get the current time since the script was injected
 local function get_current_time()
@@ -81,45 +86,113 @@ function bomber:all_waves_cleared()
 
     return not (locked_door_found or enemy_found)  -- Wellen sind gecleared, wenn weder Tür noch Feind gefunden
 end
+
+
 -- Function to move in a circular pattern and shoot
 function bomber:shoot_in_circle()
     local current_time = get_time_since_inject()
-    if current_time - circle_data.last_action_time >= circle_data.delay then
-        local player_pos = get_player_pos()
-        local angle = (circle_data.current_step / circle_data.steps) * (2 * math.pi)
-
-        local x = player_pos:x() + circle_data.radius * math.cos(angle)
-        local z = player_pos:z() + circle_data.radius * math.sin(angle)
-        local y = player_pos:y() + circle_data.height_offset * math.sin(angle)
-
-        explorer:set_custom_target(vec3:new(x, y, z))
-        explorer:move_to_target()
-        circle_data.last_action_time = current_time
-        circle_data.current_step = (circle_data.current_step % circle_data.steps) + 1
+    local player_position = get_player_position()
+    
+    -- First, navigate to the horde center position
+    if player_position:dist_to(horde_center_position) > 15 then
+        console.print("Moving to horde center position")
+        bomber:bomb_to(horde_center_position)
+        return
     end
-end
 
-
--- Function to get the current target based on various criteria
-function bomber:get_target()
-    local actors = actors_manager:get_all_actors()
-    for _, actor in pairs(actors) do
-        local name = actor:get_skin_name()
-        local health = actor:get_current_health()
-        local pos = actor:get_position()
-        local is_special = actor:is_boss() or actor:is_champion() or actor:is_elite()
-
-        -- Check conditions for different types of targets
-        if not evade.is_dangerous_position(pos) then
-            if name:match("Soulspire") and health > 20 then return actor end
-            if name == "BurningAether" then return actor end
-            if (name:match("Mass") or name:match("Zombie")) and health > 1 then return actor end
-            if name == "MarkerLocation_BSK_Occupied" then return actor end
-            if is_special then return actor end
-            if target_selector.is_valid_enemy(actor) then return actor end
+    -- Once at the center, perform the circle shooting logic
+    if current_time - circle_data.last_action_time >= circle_data.delay then
+        local center_x, center_y, center_z = horde_center_position:x(), horde_center_position:y(), horde_center_position:z()
+        local angle = (circle_data.current_step / circle_data.steps) * (2 * math.pi)
+        
+        local x = center_x + circle_data.radius * math.cos(angle)
+        local y = center_y + circle_data.radius * math.sin(angle)
+        local z = center_z + circle_data.height_offset * math.sin(angle)
+        
+        local new_position = vec3:new(x, y, z)
+        bomber:bomb_to(new_position)
+        
+        circle_data.last_action_time = current_time
+        circle_data.current_step = circle_data.current_step + 1
+        if circle_data.current_step > circle_data.steps then
+            circle_data.current_step = 1 -- Reset to start a new circle
         end
     end
 end
+
+function bomber:get_target()
+    local closest_spire = nil
+    local closest_mass = nil
+    local closest_membrane = nil
+    local closest_hellborne = nil
+    local closest_aether = nil
+    local closest_monster = nil
+
+    local closest_spire_distance = math.huge
+    local closest_mass_distance = math.huge
+    local closest_membrane_distance = math.huge
+    local closest_hellborne_distance = math.huge
+    local closest_aether_distance = math.huge
+    local closest_monster_distance = math.huge
+
+    local actors = actors_manager:get_all_actors()
+    for _, actor in pairs(actors) do
+        local health = actor:get_current_health()
+        local name = actor:get_skin_name()
+        local a_pos = actor:get_position()
+        local is_special = actor:is_boss() or actor:is_champion() or actor:is_elite()
+
+        if not evade.is_dangerous_position(a_pos) then
+            local distance_to_actor = utils.distance_to(a_pos)
+
+            if name:match("Soulspire") and health > 1 then
+                if distance_to_actor < closest_spire_distance then
+                    closest_spire_distance = distance_to_actor
+                    closest_spire = actor
+                end
+            end
+
+            if (name:match("Mass") or name:match("Zombie")) and health > 1 then
+                if distance_to_actor < closest_mass_distance then
+                    closest_mass_distance = distance_to_actor
+                    closest_mass = actor
+                end
+            end
+
+            if name == "MarkerLocation_BSK_Occupied" then
+                if distance_to_actor < closest_membrane_distance then
+                    closest_membrane_distance = distance_to_actor
+                    closest_membrane = actor
+                end
+            end
+
+            if is_special then
+                if distance_to_actor < closest_hellborne_distance then
+                    closest_hellborne_distance = distance_to_actor
+                    closest_hellborne = actor
+                end
+            end
+
+            if name == "BurningAether" then
+                if distance_to_actor < closest_aether_distance then
+                    closest_aether_distance = distance_to_actor
+                    closest_aether = actor
+                end
+            end
+
+            if target_selector.is_valid_enemy(actor) then
+                if distance_to_actor < closest_monster_distance then
+                    closest_monster_distance = distance_to_actor
+                    closest_monster = actor
+                end
+            end
+        end
+    end
+
+    return closest_spire or closest_hellborne or closest_mass or closest_membrane or closest_aether or closest_monster
+end
+
+
 
 -- List of pylons with their priorities
 local pylons = {
@@ -212,45 +285,68 @@ local move_index = 1
 local reached_target = false
 local target_reach_time = 0
 
-
+-- Extract position components for printing
+local function position_to_string(pos)
+    return string.format("x: %.2f, y: %.2f, z: %.2f", pos:x(), pos:y(), pos:z())
+end
 
 -- Function to move in a defined pattern to specific positions
 function bomber:move_in_pattern()
+    console.print("Starting move_in_pattern function")
+
     -- Prüfen, ob ein Ziel gefunden wurde
     if self:get_target() then
         console.print("Target found, stopping movement in pattern.")
         return 
     end
 
+    console.print("Current move_index: " .. tostring(move_index))
+    console.print("Total positions: " .. tostring(#move_positions))
+
     if move_index > #move_positions then
         move_index = 1
+        console.print("Reset move_index to 1")
     end
 
     local target_position = move_positions[move_index]
+    console.print("Current target position: " .. position_to_string(target_position))
 
     -- Extract position components for printing
     local function position_to_string(pos)
         return string.format("x: %.2f, y: %.2f, z: %.2f", pos:x(), pos:y(), pos:z())
     end
 
+    local player_pos = get_player_position()
+    console.print("Current player position: " .. position_to_string(player_pos))
+
+    local distance_to_target = utils.distance_to(target_position)
+    console.print("Distance to target: " .. tostring(distance_to_target))
+
     if not reached_target then
-        if utils.distance_to(target_position) > 2 then
+        if distance_to_target > 2 then
             console.print("Moving to position " .. position_to_string(target_position))
             explorer:set_custom_target(target_position)
             explorer:move_to_target()
+            console.print("Move command issued")
             target_reach_time = 0
         else
+            console.print("Close to target. target_reach_time: " .. tostring(target_reach_time))
             if target_reach_time == 3 then 
                reached_target = true
                target_reach_time = get_time_since_inject()
                console.print("Reached target position " .. position_to_string(target_position))
+            else
+               target_reach_time = target_reach_time + 1
+               console.print("Incrementing target_reach_time to " .. tostring(target_reach_time))
             end
         end
     else
         move_index = move_index + 1
         reached_target = false
-        console.print("Moving to the next position in the pattern.")
+        console.print("Moving to the next position in the pattern. New move_index: " .. tostring(move_index))
     end
+
+    console.print("Ending move_in_pattern function")
 end
 
 local last_enemy_check_time = 0
@@ -267,34 +363,30 @@ function bomber:main_pulse()
     local current_time = get_current_time()
     local world_name = get_current_world():get_name()
 
-    local pylon = bomber:get_pylons()
-
-    
+    local pylon = bomber:get_pylons()    
     if pylon then
         local aether_actor = bomber:get_aether_actor()
-        
         if aether_actor then
             console.print("Targeting Aether actor.")
-            explorer:set_custom_target(aether_actor:get_position())
-            explorer:move_to_target()
+            bomber:bomb_to(aether_actor:get_position())
         else
             console.print("Targeting Pylon and interacting with it.")
-            explorer:set_custom_target(pylon:get_position())
-            explorer:move_to_target()
-            interact_object(pylon)
+            if utils.distance_to(pylon) > 2 then
+                bomber:bomb_to(pylon:get_position())
+            else
+                console.print("interacting with pylon")
+                interact_object(pylon)
+            end
         end
         last_enemy_check_time = current_time
         return
     end
 
     local locked_door = bomber:get_locked_door()
-    
     if locked_door then
         if utils.distance_to(locked_door) > 2 then
             console.print("Moving to locked door position.")
-            explorer:set_custom_target(locked_door:get_position())
-            explorer:move_to_target()
-             
+            bomber:bomb_to(locked_door:get_position())             
         else
             console.print("Interacting with locked door.")
             interact_object(locked_door)
@@ -305,12 +397,12 @@ function bomber:main_pulse()
 
     local target = bomber:get_target()
     if target then
-        if utils.distance_to(target) > 0.5 then
-            console.print("Target detected. Moving to target position.")
-            explorer:set_custom_target(target:get_position())
-            explorer:move_to_target()
+        local name = target:get_skin_name()
+        if utils.distance_to(target) > 1.5 then
+            console.print("Moving to target: " .. name)  -- Print target name
+            bomber:bomb_to(target:get_position())
         else
-            console.print("Target in range. Performing circular shooting.")
+            console.print("Target " .. name .. " in range. Performing circular shooting.")
             bomber:shoot_in_circle()
         end
         last_enemy_check_time = current_time
@@ -321,22 +413,20 @@ function bomber:main_pulse()
             local aether = bomber:get_aether_actor()
             if aether then
                 console.print("All waves cleared. Targeting Aether actor.")
-                explorer:set_custom_target(aether:get_position())
-                explorer:move_to_target()
+                bomber:bomb_to(aether:get_position())
                 return
             end
 
             if get_player_pos():dist_to(horde_boss_room_position) > 2 then
                 console.print("Moving to boss room position.")
-                explorer:set_custom_target(horde_boss_room_position)
-                explorer:move_to_target()
-                 
+                bomber:bomb_to(horde_boss_room_position)
             else
                 console.print("In boss room. Performing circular shooting.")
                 bomber:shoot_in_circle()
             end
         else
-            console.print("Moving in pattern.")
+            console.print("shoot in circle Moving in pattern.")
+            bomber:move_in_pattern()
             
         end
     end
