@@ -19,6 +19,9 @@ function settings:update_settings()
     settings.selected_chest_type = gui.elements.chest_type_selector:get()
     settings.always_open_ga_chest = gui.elements.always_open_ga_chest:get()
     settings.loot_mothers_gift = gui.elements.loot_mothers_gift:get()
+    settings.merry_go_round = gui.elements.merry_go_round:get()
+    settings.chest_open_delay = gui.elements.chest_open_delay:get()
+    settings.boss_kill_delay = gui.elements.boss_kill_delay:get()
 end
 
 return settings

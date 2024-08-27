@@ -96,7 +96,7 @@ local open_chests_task = {
         if aether_bomb then
             -- Boss dead and dropping aether
             tracker.boss_killed = true
-            if not tracker.check_time("aether_drop_wait", 6) then
+            if not tracker.check_time("aether_drop_wait", settings.boss_kill_delay) then
                 return
             end
             self.current_state = chest_state.MOVING_TO_AETHER
@@ -204,7 +204,7 @@ local open_chests_task = {
     end,
 
     open_chest = function(self)
-        if tracker.check_time("chest_opening_time", 1) then
+        if tracker.check_time("chest_opening_time", settings.open_chest_delay) then
             local chest = utils.get_chest(enums.chest_types[self.current_chest_type])
             if chest then
                 local try_open_chest = interact_object(chest)
