@@ -21,17 +21,6 @@ local horde_bottom_position = vec3:new(20.17866, 17.897891, 0.24707)
 local unstuck_position = vec3:new(16.8066444, 12.58058, 0.000000)
 local horde_boss_room_position = vec3:new(-36.17675, -36.3222, 2.200)
 
-
-local move_positions = {
-    horde_center_position,
-    horde_left_position,     -- From Middle to Left side 
-    horde_center_position,
-    horde_bottom_position,   -- From Middle to Down side
-    horde_center_position,
-    horde_right_position,    -- From Middle to Right side
-    horde_center_position,
-}
-
 -- Data for circular shooting pattern
 local circle_data = {
     radius = 90,
@@ -293,7 +282,17 @@ local function position_to_string(pos)
 end
 
 -- Function to move in a defined pattern to specific positions
-function bomber:move_in_pattern()
+function bomber:move_in_pattern(move_positions)
+    move_positions = move_positions or {
+        horde_center_position,
+        horde_left_position,     -- From Middle to Left side 
+        horde_center_position,
+        horde_bottom_position,   -- From Middle to Down side
+        horde_center_position,
+        horde_right_position,    -- From Middle to Right side
+        horde_center_position,
+    }
+    
     console.print("Starting move_in_pattern function")
 
     -- Prüfen, ob ein Ziel gefunden wurde
@@ -422,6 +421,7 @@ function bomber:main_pulse()
                 horde_left_position,
                 horde_center_position
             }
+            
             if aether then
                 console.print("All waves cleared. Targeting Aether actor.")
                 bomber:bomb_to(aether:get_position())
