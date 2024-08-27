@@ -77,7 +77,7 @@ local town_salvage_task = {
 
     init_salvage = function(self)
         console.print("Initializing salvage process")
-        if not utils.player_in_zone("Scos_Cerrigar") and get_local_player():get_item_count() >= 1 then
+        if not utils.player_in_zone("Scos_Cerrigar") and get_local_player():get_item_count() >= 15 then
             self.current_state = salvage_state.TELEPORTING
             self.teleport_start_time = get_time_since_inject()
             self.teleport_attempts = 0
