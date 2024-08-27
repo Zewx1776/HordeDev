@@ -15,18 +15,20 @@ local bomber = {
 
 -- Define key positions for movement and patterns
 local horde_center_position = vec3:new(9.204102, 8.915039, 0.000000)
+local horde_left_position = vec3:new(19.5658, -1.5756, 0.6289)
+local horde_right_position = vec3:new(0.24825286, 20.6410, 0.4697)
+local horde_bottom_position = vec3:new(20.17866, 17.897891, 0.24707)
 local unstuck_position = vec3:new(16.8066444, 12.58058, 0.000000)
 local horde_boss_room_position = vec3:new(-36.17675, -36.3222, 2.200)
 
 
-
 local move_positions = {
     horde_center_position,
-    vec3:new(19.5658, -1.5756, 0.6289),       -- From Middle to Left side 
+    horde_left_position,     -- From Middle to Left side 
     horde_center_position,
-    vec3:new(20.17866, 17.897891, 0.24707),   -- From Middle to Down side
+    horde_bottom_position,   -- From Middle to Down side
     horde_center_position,
-    vec3:new(0.24825286, 20.6410, 0.4697),    -- From Middle to Right side
+    horde_right_position,    -- From Middle to Right side
     horde_center_position,
 }
 
@@ -304,6 +306,7 @@ function bomber:move_in_pattern()
     console.print("Total positions: " .. tostring(#move_positions))
 
     if move_index > #move_positions then
+        tracker.victory_lap = true
         move_index = 1
         console.print("Reset move_index to 1")
     end
@@ -411,9 +414,24 @@ function bomber:main_pulse()
         
         if bomber:all_waves_cleared() then
             local aether = bomber:get_aether_actor()
+
+            -- clockwise rotation to check stray aether
+            local positions = {
+                horde_right_position,
+                horde_bottom_position,
+                horde_left_position,
+                horde_center_position
+            }
             if aether then
                 console.print("All waves cleared. Targeting Aether actor.")
                 bomber:bomb_to(aether:get_position())
+                return
+            end
+
+            -- do a victory_lap before moving to boss
+            if not tracker.victory_lap then
+                console.print("Doing a victory lap.")
+                bomber:move_in_pattern(positions)
                 return
             end
 
