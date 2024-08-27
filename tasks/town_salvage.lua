@@ -37,12 +37,12 @@ local town_salvage_task = {
     
         -- If we're already in Cerrigar, continue the salvage process regardless of the gold chest
         if in_cerrigar then
-            return settings.loot_modes == gui.loot_modes_enum.SALVAGE
+            return settings.salvage
         end
     
         -- If we're not in Cerrigar, we need both high item count and a gold chest to start
         return item_count >= 25 and 
-               settings.loot_modes == gui.loot_modes_enum.SALVAGE and
+               settings.salvage and
                gold_chest_exists
     end,
 
