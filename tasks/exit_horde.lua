@@ -16,7 +16,7 @@ exit_horde_task = {
     shouldExecute = function()
         return utils.player_in_zone("S05_BSK_Prototype02")
             and utils.get_stash() ~= nil
-            and (tracker.finished_chest_looting or not utils.get_chest(enums.chest_types["GOLD"])) 
+            and tracker.finished_chest_looting 
     end,
     
     Execute = function()
@@ -31,7 +31,7 @@ exit_horde_task = {
                 return
             else
                 exit_horde_task.moved_to_center = true
-                console.print("Reached boss room position.")
+                console.print("Reached Central Room Postion.")
             end
         end
 
