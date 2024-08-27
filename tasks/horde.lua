@@ -340,9 +340,7 @@ function bomber:main_pulse()
     end
 
     local target = bomber:get_target()
-    if tracker.boss_killed then
-        return
-    elseif target then
+    if target then
         local name = target:get_skin_name()
         if utils.distance_to(target) > 1.5 then
             console.print("Moving to target: " .. name)  -- Print target name
@@ -376,12 +374,14 @@ function bomber:main_pulse()
             return
         end
 
-        if get_player_pos():dist_to(horde_boss_room_position) > 2 then
-            console.print("Moving to boss room position.")
-            bomber:bomb_to(horde_boss_room_position)
-        else
-            console.print("In boss room. Performing circular shooting.")
-            bomber:shoot_in_circle()
+        if not tracker.boss_killed then
+            if get_player_pos():dist_to(horde_boss_room_position) > 2 then
+                console.print("Moving to boss room position.")
+                bomber:bomb_to(horde_boss_room_position)
+            else
+                console.print("In boss room. Performing circular shooting.")
+                bomber:shoot_in_circle()
+            end
         end
     else
         console.print("shoot in circle Moving in pattern.")
