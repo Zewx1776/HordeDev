@@ -22,6 +22,7 @@ local enter_horde_task = {
     end,
     Execute = function()
         enter_horde()
+        enter_horde_task:reset()  -- Triggering the reset after entering the horde
     end,
     reset = function(self)
         tracker.finished_chest_looting = false
