@@ -16,7 +16,7 @@ exit_horde_task = {
     shouldExecute = function()
         return utils.player_in_zone("S05_BSK_Prototype02")
             and utils.get_stash() ~= nil
-            and tracker.finished_chest_looting 
+            and (tracker.gold_chest_opened or not utils.get_chest(enums.chest_types["GOLD"])) 
     end,
     
     Execute = function()
