@@ -47,6 +47,7 @@ gui.elements = {
     merry_go_round = checkbox:new(true, get_hash("merry_go_round")),
     chest_open_delay = slider_float:new(1.0, 3.0, 1.0, get_hash("chest_open_delay")), -- 1.0 is the default value
     boss_kill_delay = slider_int:new(1, 10, 6, get_hash("boss_kill_delay")), -- 6 is a default value
+    chest_move_attempts = slider_int:new(20, 400, 20, get_hash("chest_move_attempts")), -- 20 is a default value
 }
 
 function gui.render()
@@ -68,6 +69,7 @@ function gui.render()
         gui.elements.merry_go_round:render("Circle arena when wave completes", "Toggle to circle arene when wave completes to pick up stray Aethers")
         gui.elements.open_chest_delay:render("Chest open delay", "Adjust delay for the chest opening (1.0-3.0)")
         gui.elements.boss_kill_delay:render("Boss kill delay", "Adjust delay after killing boss (1-10)")
+        gui.elements.chest_move_attempts:render("Chest move attempts", "Adjust the amount of times it tries to reach a chest (20-400)")
         
         gui.elements.settings_tree:pop()
     end
