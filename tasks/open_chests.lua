@@ -125,7 +125,7 @@ local open_chests_task = {
     move_to_aether = function(self)
         local aether_bomb = utils.get_aether_actor()
         if aether_bomb then
-            if utils.distance_to(aether_bomb) > 2 then
+            if utils.distance_to(aether_bomb) > 0.1 then
                 explorer:set_custom_target(aether_bomb:get_position())
                 explorer:move_to_target()
             else
