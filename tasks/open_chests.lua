@@ -5,10 +5,14 @@ local enums = require "data.enums"
 local tracker = require "core.tracker"
 local explorer = require "core.explorer"
 
+-- Reference the position from horde.lua
+local horde_boss_room_position = vec3:new(-36.17675, -36.3222, 2.200)
+
 local chest_state = {
     INIT = "INIT",
     MOVING_TO_AETHER = "MOVING_TO_AETHER",
     COLLECTING_AETHER = "COLLECTING_AETHER",
+    MOVING_TO_CENTER = "MOVING_TO_CENTER",
     SELECTING_CHEST = "SELECTING_CHEST",
     MOVING_TO_CHEST = "MOVING_TO_CHEST",
     OPENING_CHEST = "OPENING_CHEST",
@@ -79,6 +83,8 @@ local open_chests_task = {
             self:move_to_aether()
         elseif self.current_state == chest_state.COLLECTING_AETHER then
             self:collect_aether()
+        elseif self.current_state == chest_state.MOVING_TO_CENTER then
+            self:move_to_center()
         elseif self.current_state == chest_state.SELECTING_CHEST then
             self:select_chest()
         elseif self.current_state == chest_state.MOVING_TO_CHEST then
@@ -146,10 +152,21 @@ local open_chests_task = {
         local aether_bomb = utils.get_aether_actor()
         if aether_bomb then
             interact_object(aether_bomb)
-            self.current_state = chest_state.SELECTING_CHEST
+            self.current_state = chest_state.MOVING_TO_CENTER
         else
             console.print("No aether bomb found to collect")
+            self.current_state = chest_state.MOVING_TO_CENTER
+        end
+    end,
+
+    move_to_center = function(self)
+        if utils.distance_to(horde_boss_room_position) > 2 then
+            console.print("Moving to center position.")
+            explorer:set_custom_target(horde_boss_room_position)
+            explorer:move_to_target()
+        else
             self.current_state = chest_state.SELECTING_CHEST
+            console.print("Reached Central Room Postion.")
         end
     end,
 
