@@ -31,6 +31,7 @@ function tracker.check_time(key, delay)
     return false
 end
 
+-- The plan is to have a separate table that stores all the key added by check_time and clear them all on exit
 function tracker.clear_key(key)
     tracker[key] = nil
 end

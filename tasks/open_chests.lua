@@ -1,4 +1,3 @@
-
 local utils = require "core.utils"
 local settings = require "core.settings"
 local enums = require "data.enums"
@@ -166,7 +165,7 @@ local open_chests_task = {
             explorer:move_to_target()
         else
             self.current_state = chest_state.SELECTING_CHEST
-            console.print("Reached Central Room Postion.")
+            console.print("Reached Central Room Position.")
         end
     end,
 
@@ -298,8 +297,6 @@ local open_chests_task = {
             tracker.ga_chest_opened = true
         elseif self.current_chest_type == self.selected_chest_type then
             tracker.selected_chest_opened = true
-        elseif self.current_chest_type == "GOLD" then
-            tracker.gold_chest_opened = true
         end
     
         console.print("Next chest type set to: " .. self.current_chest_type)
@@ -308,29 +305,31 @@ local open_chests_task = {
     end,
 
     finish_chest_opening = function(self)
+        -- Handle opening the gold chest with a 6-second delay
+        if self.current_chest_type == "GOLD" then
+            if not tracker.check_time("gold_chest_timer", 6) then
+                console.print("Waiting for 6 seconds before opening the gold chest.")
+                return
+            end
+            tracker.gold_chest_opened = true
+        end
+    
         if self.current_chest_type == "GREATER_AFFIX" then
             tracker.ga_chest_opened = true
         elseif self.current_chest_type == self.selected_chest_type then
             tracker.selected_chest_opened = true
         end
     
-        if self.current_chest_type == "GOLD" or self.selected_chest_type == "GOLD" then
-            tracker.gold_chest_opened = true
-        end
-    
         tracker.finished_chest_looting = true
-        tracker.gold_chest_opened = true
         console.print("Set tracker.finished_chest_looting to true in finish_chest_opening")
-    
         console.print("Chest opening task finished")
-        return
     end,
 
     reset = function(self)
         self.current_state = chest_state.INIT
         self.current_chest_type = nil
         self.failed_attempts = 0
-        self.current_chest_index = nil
+        self.current_chest_index = nil-- Reset the timer during reset
         tracker.finished_chest_looting = false
         tracker.ga_chest_opened = false
         tracker.selected_chest_opened = false
