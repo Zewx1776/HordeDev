@@ -30,9 +30,9 @@ gui.elements = {
     always_open_ga_chest = create_checkbox("always_open_ga_chest"),
     loot_mothers_gift = create_checkbox("loot_mothers_gift"),
     merry_go_round = checkbox:new(true, get_hash("merry_go_round")),
-    chest_open_delay = slider_float:new(1.0, 3.0, 1.0, get_hash("chest_open_delay")), -- 1.0 is the default value
+    chest_open_delay = slider_float:new(1.0, 3.0, 1.5, get_hash("chest_open_delay")), -- 1.0 is the default value
     boss_kill_delay = slider_int:new(1, 10, 6, get_hash("boss_kill_delay")), -- 6 is a default value
-    chest_move_attempts = slider_int:new(20, 400, 20, get_hash("chest_move_attempts")), -- 20 is a default value
+    chest_move_attempts = slider_int:new(20, 400, 40, get_hash("chest_move_attempts")), -- 20 is a default value
 }
 
 function gui.render()
