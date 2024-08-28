@@ -182,7 +182,7 @@ local open_chests_task = {
                     explorer:move_to_target()
 
                     self.move_attempts = (self.move_attempts or 0) + 1
-                    if self.move_attempts >= 20 then  -- Adjust this number as needed
+                    if self.move_attempts >= 400 then  -- Adjust this number as needed
                         console.print("Failed to reach chest after multiple attempts")
                         self:try_next_chest()
                         return
