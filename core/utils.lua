@@ -280,4 +280,8 @@ function utils.get_aether_actor()
     return nil
 end
 
+function utils.is_inventory_full()
+    return get_local_player():get_item_count() == 33
+ end
+
 return utils

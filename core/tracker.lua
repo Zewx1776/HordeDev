@@ -16,6 +16,7 @@ local tracker = {
     wave_start_time = 0,
     needs_salvage = false,
     victory_lap = false,
+    victory_positions = nil,
     locked_door_found = false,
     boss_killed = false,
 }

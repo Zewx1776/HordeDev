@@ -7,6 +7,7 @@ local settings = {
     path_angle = 10,
     reset_time = 1,
     selected_chest_type = nil,
+    failover_chest_type = nil
 }
 
 function settings:update_settings()
@@ -15,6 +16,7 @@ function settings:update_settings()
     settings.salvage = gui.elements.salvage_toggle:get() -- Change this line
     settings.path_angle = gui.elements.path_angle_slider:get()
     settings.selected_chest_type = gui.elements.chest_type_selector:get()
+    settings.failover_chest_type = gui.elements.failover_chest_type_selector:get()
     settings.always_open_ga_chest = gui.elements.always_open_ga_chest:get()
     settings.loot_mothers_gift = gui.elements.loot_mothers_gift:get()
     settings.merry_go_round = gui.elements.merry_go_round:get()

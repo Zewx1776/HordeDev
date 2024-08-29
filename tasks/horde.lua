@@ -362,16 +362,32 @@ function bomber:main_pulse()
         -- do a victory_lap before moving to boss
         -- clockwise rotation to check stray aether
         if settings.merry_go_round then
-            local positions = {
-                horde_center_position,
+            local left_positions = {
+                horde_left_position,
                 horde_right_position,
                 horde_bottom_position,
+            }
+            local right_positions = {
+                horde_right_position,
                 horde_left_position,
-                horde_center_position,
+                horde_bottom_position,
             }
             if not tracker.victory_lap then
-                console.print("Doing a victory lap.")
-                bomber:move_in_pattern(positions, true)
+                if not tracker.victory_positions then
+                    -- Start from first position
+                    move_index = 1
+                    if get_player_pos():dist_to(horde_left_position) < get_player_pos():dist_to(horde_right_position) then
+                        console.print("Doing a victory lap from left.")
+                        tracker.victory_positions = left_positions
+                        return
+                    else
+                        console.print("Doing a victory lap from right.")
+                        tracker.victory_positions = right_positions
+                        return
+                    end
+                end
+                console.print("Doing a victory lap from right.")
+                bomber:move_in_pattern(tracker.victory_positions, true)
                 return
             end
         end
