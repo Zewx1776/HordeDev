@@ -30,6 +30,7 @@ gui.elements = {
     melee_logic = create_checkbox("melee_logic"),
     elite_only_toggle = create_checkbox("elite_only"),
     salvage_toggle = create_checkbox("salvage_toggle"),
+    aggresive_movement_toggle = create_checkbox("aggresive_movement_toggle"),
     path_angle_slider = slider_int:new(0, 360, 10, get_hash("path_angle_slider")), -- 10 is a default value
     chest_type_selector = combo_box:new(0, get_hash("chest_type_selector")),
     failover_chest_type_selector = combo_box:new(0, get_hash("failover_chest_type_selector")),
@@ -48,7 +49,8 @@ function gui.render()
     
     if gui.elements.settings_tree:push("Settings") then
         gui.elements.melee_logic:render("Melee", "Do we need to move into Melee?")
-        gui.elements.elite_only_toggle:render("Elite Only", "Do we only want to seek out elites in the Pit?")   
+        gui.elements.elite_only_toggle:render("Elite Only", "Do we only want to seek out elites in the Pit?") 
+        gui.elements.aggresive_movement_toggle:render("Aggresive movement", "Move directly to target, will fight close to target")  
         gui.elements.salvage_toggle:render("Salvage", "Enable salvaging items")
         gui.elements.path_angle_slider:render("Path Angle", "Adjust the angle for path filtering (0-360 degrees)")
         
