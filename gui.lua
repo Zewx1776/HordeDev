@@ -18,6 +18,11 @@ gui.chest_types_options = {
     "Gold",
 }
 
+gui.failover_chest_types_options = {
+    "Materials",
+    "Gold",
+}
+
 gui.elements = {
     main_tree = tree_node:new(0),
     main_toggle = create_checkbox("main_toggle"),
@@ -27,7 +32,13 @@ gui.elements = {
     salvage_toggle = create_checkbox("salvage_toggle"),
     path_angle_slider = slider_int:new(0, 360, 10, get_hash("path_angle_slider")), -- 10 is a default value
     chest_type_selector = combo_box:new(0, get_hash("chest_type_selector")),
+    failover_chest_type_selector = combo_box:new(0, get_hash("failover_chest_type_selector")),
     always_open_ga_chest = create_checkbox("always_open_ga_chest"),
+    loot_mothers_gift = create_checkbox("loot_mothers_gift"),
+    merry_go_round = checkbox:new(true, get_hash("merry_go_round")),
+    open_chest_delay = slider_float:new(1.0, 3.0, 1.5, get_hash("open_chest_delay")), -- 1.0 is the default value
+    boss_kill_delay = slider_int:new(1, 10, 6, get_hash("boss_kill_delay")), -- 6 is a default value
+    chest_move_attempts = slider_int:new(20, 400, 40, get_hash("chest_move_attempts")), -- 20 is a default value
 }
 
 function gui.render()
@@ -43,7 +54,15 @@ function gui.render()
         
         -- Updated chest type selector to use the new enum structure
         gui.elements.chest_type_selector:render("Chest Type", gui.chest_types_options, "Select the type of chest to open")
+        if gui.elements.chest_type_selector:get() == 0 and not gui.elements.salvage_toggle:get() then
+            gui.elements.failover_chest_type_selector:render("Failover Chest Type When Inventory is full", gui.failover_chest_types_options, "Select the failover type of chest to open when inventory is full")
+        end
         gui.elements.always_open_ga_chest:render("Always Open GA Chest", "Toggle to always open Greater Affix chest when available")
+        gui.elements.loot_mothers_gift:render("Loot Mother's Gift", "Toggle to loot Mother's Gift")
+        gui.elements.merry_go_round:render("Circle arena when wave completes", "Toggle to circle arene when wave completes to pick up stray Aethers")
+        gui.elements.open_chest_delay:render("Chest open delay", "Adjust delay for the chest opening (1.0-3.0)", 2)
+        gui.elements.boss_kill_delay:render("Boss kill delay", "Adjust delay after killing boss (1-10)")
+        gui.elements.chest_move_attempts:render("Chest move attempts", "Adjust the amount of times it tries to reach a chest (20-400)")
         
         gui.elements.settings_tree:pop()
     end

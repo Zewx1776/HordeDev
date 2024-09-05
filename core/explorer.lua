@@ -499,58 +499,7 @@ end
 
 local last_a_star_call = 0.0
 
-local function move_to_target()
-    if explorer.is_task_running then
-        return  -- Do not set a path if a task is running
-    end
 
-    if target_position then
-        local player_pos = get_player_position()
-        if calculate_distance(player_pos, target_position) > 500 then
-            current_path = {}
-            path_index = 1
-            return
-        end
-
-        local current_core_time = get_time_since_inject()
-        local time_since_last_call = current_core_time - last_a_star_call
-
-        if not current_path or #current_path == 0 or path_index > #current_path or time_since_last_call >= 0.50 then
-            path_index = 1
-            current_path = nil
-            current_path = a_star(player_pos, target_position)
-            last_a_star_call = current_core_time
-
-            if not current_path then
-                console.print("No path found to target. Finding new target.")
-                return
-            end
-        end
-
-        local next_point = current_path[path_index]
-        if next_point and not next_point:is_zero() then
-            --pathfinder.request_move(next_point)
-            pathfinder.force_move(next_point)
-        end
-
-        if next_point and next_point.x and not next_point:is_zero() and calculate_distance(player_pos, next_point) < grid_size then
-            local direction = {
-                x = next_point:x() - player_pos:x(),
-                y = next_point:y() - player_pos:y()
-            }
-            last_movement_direction = direction
-            path_index = path_index + 1
-        end
-
-        if calculate_distance(player_pos, target_position) < 2 then
-            target_position = nil
-            current_path = {}
-            path_index = 1
-        end
-    else
-        -- Potentially handle case when there's no target_position
-    end
-end
 
 
 local function check_if_stuck()
@@ -578,12 +527,13 @@ function explorer:set_custom_target(target)
     target_position = target
 end
 
--- Expose the move_to_target function
 function explorer:move_to_target()
-    console.print("moving to target")
-    move_to_target()
+    if target_position then
+        pathfinder.force_move_raw(target_position)
+    else
+        console.print("No target position set.")
+    end
 end
-
 local last_call_time = 0.0
 local is_player_on_quest = false
 on_update(function()

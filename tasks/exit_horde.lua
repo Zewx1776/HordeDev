@@ -64,10 +64,16 @@ exit_horde_task = {
         if elapsed_time >= 10 then
             console.print("10-second timer completed. Resetting all dungeons")
             reset_all_dungeons()
+            tracker.clear_key("aether_drop_wait")
+            tracker.clear_key("gold_chest_timer")
+            tracker.victory_lap = false
+            tracker.victory_positions = nil
+            tracker.locked_door_found = false
             tracker.exit_horde_start_time = nil
             tracker.exit_horde_completion_time = current_time
             tracker.horde_opened = false
             tracker.start_dungeon_time = nil
+            tracker.boss_killed = false
             exit_horde_task.delay_start_time = nil  -- Reset the delay timer
             exit_horde_task.moved_to_center = false  -- Reset the moved_to_center flag
         else
