@@ -90,6 +90,12 @@ local last_position = nil
 local last_move_time = 0
 local last_explored_targets = {}
 local max_last_targets = 50
+local stuck_check_interval = 2  -- Check every 2 seconds
+local stuck_distance_threshold = 0.5  -- Consider stuck if moved less than 0.5 units
+local temp_target_distance = 10  -- Distance for temporary target
+local last_stuck_check_time = 0
+local last_stuck_check_position = nil
+local original_target = nil
 
 -- Function to check and print pit start time and time spent in pit
 local function check_pit_time()
@@ -182,6 +188,75 @@ local function is_point_in_explored_area(point)
         point:z() >= explored_area_bounds.min_z and point:z() <= explored_area_bounds.max_z
 end
 
+
+local function find_unstuck_target()
+    console.print("Finding unstuck target.")
+    local player_pos = get_player_position()
+    local valid_targets = {}
+
+    for x = -unstuck_target_distance, unstuck_target_distance, grid_size do
+        for y = -unstuck_target_distance, unstuck_target_distance, grid_size do
+            local point = vec3:new(
+                player_pos:x() + x,
+                player_pos:y() + y,
+                player_pos:z()
+            )
+            point = set_height_of_valid_position(point)
+
+            local distance = calculate_distance(player_pos, point)
+            if utility.is_point_walkeable(point) and distance >= 2 and distance <= unstuck_target_distance then
+                table.insert(valid_targets, point)
+            end
+        end
+    end
+
+    if #valid_targets > 0 then
+        return valid_targets[math.random(#valid_targets)]
+    end
+
+    return nil
+end
+
+explorer.find_unstuck_target = find_unstuck_target
+
+
+local function handle_stuck_player()
+    local current_time = os.time()
+    local player_pos = get_player_position()
+
+    if not last_stuck_check_position then
+        last_stuck_check_position = player_pos
+        last_stuck_check_time = current_time
+        return false
+    end
+
+    if current_time - last_stuck_check_time >= stuck_check_interval then
+        local distance_moved = calculate_distance(player_pos, last_stuck_check_position)
+
+        if distance_moved < stuck_distance_threshold then
+            console.print("Player appears to be stuck. Finding temporary target.")
+            original_target = target_position
+            local temp_target = find_unstuck_target()
+            if temp_target then
+                target_position = temp_target
+                --console.print("Temporary target set: " .. tostring(temp_target))
+
+            else
+                console.print("Failed to find temporary target.")
+            end
+            return true
+        elseif original_target and distance_moved >= stuck_distance_threshold * 2 then
+            console.print("Player has moved. Returning to original target.")
+            target_position = original_target
+            original_target = nil
+        end
+
+        last_stuck_check_position = player_pos
+        last_stuck_check_time = current_time
+    end
+
+    return false
+end
 
 local function check_walkable_area()
     --console.print("Checking walkable area.")
@@ -330,36 +405,6 @@ local function find_nearby_unexplored_point(center, radius)
 
     return nil
 end
-
-local function find_unstuck_target()
-    console.print("Finding unstuck target.")
-    local player_pos = get_player_position()
-    local valid_targets = {}
-
-    for x = -unstuck_target_distance, unstuck_target_distance, grid_size do
-        for y = -unstuck_target_distance, unstuck_target_distance, grid_size do
-            local point = vec3:new(
-                player_pos:x() + x,
-                player_pos:y() + y,
-                player_pos:z()
-            )
-            point = set_height_of_valid_position(point)
-
-            local distance = calculate_distance(player_pos, point)
-            if utility.is_point_walkeable(point) and distance >= 2 and distance <= unstuck_target_distance then
-                table.insert(valid_targets, point)
-            end
-        end
-    end
-
-    if #valid_targets > 0 then
-        return valid_targets[math.random(#valid_targets)]
-    end
-
-    return nil
-end
-
-explorer.find_unstuck_target = find_unstuck_target
 
 -- A* pathfinding functions
 local function heuristic(a, b)
@@ -592,15 +637,26 @@ local function move_to_target_aggresive()
     end
 end
 
+
 function explorer:move_to_target()
-    console.print("moving to target")
+    console.print("Moving to target")
+    
+    if handle_stuck_player() then
+        -- If we've just set a temporary target, we want to move to it immediately
+        if settings.aggresive_movement then
+            move_to_target_aggresive()
+        else
+            move_to_target()
+        end
+        return
+    end
+
     if settings.aggresive_movement then
         move_to_target_aggresive()
     else
         move_to_target()
     end
 end
-
 
 local last_call_time = 0.0
 local is_player_on_quest = false
