@@ -85,6 +85,7 @@ local open_chests_task = {
             return
         end
         console.print("Resume chest opening")
+        tracker.salvage_return_time = nil
         tracker.has_salvaged = false
         self.current_state = chest_state.MOVING_TO_CHEST
         return

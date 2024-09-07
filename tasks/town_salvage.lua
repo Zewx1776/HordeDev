@@ -180,7 +180,7 @@ local town_salvage_task = {
                 if item_count <= 1 then
                     tracker.has_salvaged = true
                     console.print("Salvage complete, item count is 15 or less. Moving to portal")
-                    self.current_state = salvage_state.MOVING_TO_PORTAL
+                    self.current_state = salvage_state.FINISHED
                 else
                     console.print("Item count is still above 15, retrying salvage")
                     self.current_retries = self.current_retries + 1
@@ -240,9 +240,9 @@ local town_salvage_task = {
         console.print("Finishing salvage task")
         tracker.has_salvaged = true
         tracker.needs_salvage = false
-        self.current_state = salvage_state.INIT
         self.current_retries = 0
         console.print("Town salvage task finished")
+        self.current_state = salvage_state.MOVING_TO_PORTAL
     end,
 
     reset = function(self)

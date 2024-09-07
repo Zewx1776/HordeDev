@@ -10,15 +10,15 @@ local pylons = {
     "SurgingElites",           -- Chance for Elite Doubled, Aether Fiends grant +2 Aether
     "EmpoweredElites",         -- Elite damage +25%, Aether Fiends grant +2 Aether
     "UnstoppableElites",       -- Elites are Unstoppable, Aether Fiends grant +2 Aether
-    "DeadlySpires",            -- Soulspires Drain Health, Soulspires grant +2 Aether
-    "EmpoweredMasses",         -- Aetheric Mass damage: +25%, Aetheric Mass grants +1 Aether
-    "ThrivingMasses",          -- Masses deal unavoidable damage, Wave start, spawn an Aetheric Mass
-    "GreedySpires",            -- Soulspire requires 2x kills, Soulspires grant 2x Aether
-    "CorruptingSpires",        -- Soulspires empower nearby foes, they also pull enemies inward
     "IncreasedEvadeCooldown",  -- Increase Evade Cooldown +2 Sec, Council grants +15 Aether
     "IncreasedPotionCooldown", -- Increase potion cooldown +2 Sec, Council Grants +15 Aether
     "EmpoweredCouncil",        -- Fell Council +50% Damage, Council grants +15 Aether
     "ReduceAllResistance",     -- Reduce All Resist -10%, Council grants +15 Aether
+    "EmpoweredMasses",         -- Aetheric Mass damage: +25%, Aetheric Mass grants +1 Aether
+    "ThrivingMasses",          -- Masses deal unavoidable damage, Wave start, spawn an Aetheric Mass
+    "DeadlySpires",            -- Soulspires Drain Health, Soulspires grant +2 Aether
+    "GreedySpires",            -- Soulspire requires 2x kills, Soulspires grant 2x Aether
+    "CorruptingSpires",        -- Soulspires empower nearby foes, they also pull enemies inward
     "UnstableFiends",          -- Elite Damage +25%, Aether Fiends explode and damage FOES
     "AetherRush",              -- Normal Monsters Damage +25%, Gathering Aether Increases Movement Speed
     "EnergizingMasses",        -- Slaying Aetheric Masses slow you, While slowed this way, you have UNLIMITED RESOURCES
