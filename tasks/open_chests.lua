@@ -39,11 +39,6 @@ local open_chests_task = {
             return false
         end
     
-        if tracker.needs_salvage then
-            console.print("  needs_salvage: true")
-            return false
-        end
-    
         local gold_chest_exists = utils.get_chest(enums.chest_types["GOLD"]) ~= nil
     
         if not gold_chest_exists then
@@ -59,42 +54,42 @@ local open_chests_task = {
         local current_time = get_time_since_inject()
         console.print("Current state: " .. self.current_state)
     
-        -- Check if we're in the correct zone
-        if not utils.player_in_zone("S05_BSK_Prototype02") then
-            console.print("Not in the correct zone. Waiting...")
-            return
-        end
+        -- -- Add a delay after returning from salvage
+        -- if self.returning_from_salvage then
+        --     if not self.salvage_return_time then
+        --         self.salvage_return_time = current_time
+        --     elseif current_time - self.salvage_return_time > 5 then -- 5 second delay
+        --         self.returning_from_salvage = false
+        --         self.salvage_return_time = nil
+        --         console.print("Resuming chest opening after salvage")
+        --     else
+        --         console.print("Waiting before resuming chest opening")
+        --         return
+        --     end
+        -- end
     
-        -- Add a delay after returning from salvage
-        if self.returning_from_salvage then
-            if not self.salvage_return_time then
-                self.salvage_return_time = current_time
-            elseif current_time - self.salvage_return_time > 5 then -- 5 second delay
-                self.returning_from_salvage = false
-                self.salvage_return_time = nil
-                console.print("Resuming chest opening after salvage")
-            else
-                console.print("Waiting before resuming chest opening")
-                return
-            end
-        end
+        -- if tracker.needs_salvage then
+        --     if self.current_state ~= chest_state.PAUSED_FOR_SALVAGE then
+        --         self.state_before_pause = self.current_state
+        --         self.current_state = chest_state.PAUSED_FOR_SALVAGE
+        --         console.print("Pausing chest opening for salvage")
+        --     end
+        --     return
+        -- elseif self.current_state == chest_state.PAUSED_FOR_SALVAGE then
+        --     self.current_state = self.state_before_pause
+        --     self.state_before_pause = nil
+        --     self.returning_from_salvage = true
+        --     console.print("Returning from salvage")
+        --     return
+        -- end
+
+        
     
-        if tracker.needs_salvage then
-            if self.current_state ~= chest_state.PAUSED_FOR_SALVAGE then
-                self.state_before_pause = self.current_state
-                self.current_state = chest_state.PAUSED_FOR_SALVAGE
-                console.print("Pausing chest opening for salvage")
-            end
-            return
+        if tracker.has_salvaged then
+            self:return_from_salvage()
         elseif self.current_state == chest_state.PAUSED_FOR_SALVAGE then
-            self.current_state = self.state_before_pause
-            self.state_before_pause = nil
-            self.returning_from_salvage = true
-            console.print("Returning from salvage")
-            return
-        end
-    
-        if self.current_state == chest_state.FINISHED then
+            self:waiting_for_salvage()
+        elseif self.current_state == chest_state.FINISHED then
             self:finish_chest_opening()
         elseif self.current_state == chest_state.INIT then
             self:init_chest_opening()
@@ -113,6 +108,23 @@ local open_chests_task = {
         elseif self.current_state == chest_state.WAITING_FOR_VFX then
             self:wait_for_vfx()
         end
+    end,
+
+    return_from_salvage = function(self)
+        if not tracker.check_time("salvage_return_time", 3) then
+            console.print("Waiting before resuming chest opening")
+            return
+        end
+        console.print("Resume chest opening")
+        tracker.has_salvaged = false
+        self.current_state = chest_state.MOVING_TO_CHEST
+        return
+    end,
+
+    waiting_for_salvage = function(self)
+        console.print("Need salvage. Setting tracker.needs_salvage to start salvage task")
+        tracker.needs_salvage = true
+        return
     end,
 
     init_chest_opening = function(self)
@@ -222,7 +234,7 @@ local open_chests_task = {
                     console.print(string.format("Moving to %s chest", self.current_chest_type))
                     explorer:set_custom_target(chest:get_position())
                     explorer:move_to_target()
-    
+
                     self.move_attempts = (self.move_attempts or 0) + 1
                     if self.move_attempts >= settings.chest_move_attempts then
                         console.print("Failed to reach chest after multiple attempts")
@@ -258,6 +270,10 @@ local open_chests_task = {
                 self.selected_chest_type = failover_chest_type_map[settings.failover_chest_type + 1]
                 self.current_chest_type = failover_chest_type_map[settings.failover_chest_type + 1]
                 self.current_state = chest_state.MOVING_TO_CHEST
+                return
+            elseif settings.salvage and (self.current_chest_type == "GEAR" or self.current_chest_type == "GREATER_AFFIX") and utils.is_inventory_full() then
+                self.state_before_pause = self.current_state
+                self.current_state = chest_state.PAUSED_FOR_SALVAGE
                 return
             end
             local chest = utils.get_chest(enums.chest_types[self.current_chest_type])
@@ -316,6 +332,10 @@ local open_chests_task = {
             self.selected_chest_type = failover_chest_type_map[settings.failover_chest_type + 1]
             self.current_chest_type = failover_chest_type_map[settings.failover_chest_type + 1]
             self.current_state = chest_state.MOVING_TO_CHEST
+            return
+        elseif settings.salvage and (self.current_chest_type == "GEAR" or self.current_chest_type == "GREATER_AFFIX") and utils.is_inventory_full() then
+            self.state_before_pause = self.current_state
+            self.current_state = chest_state.PAUSED_FOR_SALVAGE
             return
         end
     

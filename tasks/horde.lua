@@ -50,23 +50,12 @@ end
 
 -- Function to check if all waves are cleared
 function bomber:all_waves_cleared()
-    local actors = actors_manager:get_all_actors()
-    local enemy_found = false
-
-    -- Zuerst nach Gegnern suchen
-    for _, actor in pairs(actors) do
-        if target_selector.is_valid_enemy(actor) then
-            enemy_found = true
-            break  -- Schleife beenden, sobald ein Gegner gefunden wurde
-        end
-    end
-
-    -- If no enemy and found locked door
-    if not enemy_found and bomber:get_locked_door() then
+    -- If door not found
+    if bomber:get_locked_door() then
         tracker.locked_door_found = true
     end
     -- wave considered as cleared when found door or no enemies
-    return tracker.locked_door_found or not enemy_found 
+    return tracker.locked_door_found
 end
 
 
@@ -320,20 +309,15 @@ function bomber:main_pulse()
 
     local pylon = bomber:get_pylons()    
     if pylon then
-        -- reset move index on new wave
-        move_index = 1
-        local aether_actor = utils.get_aether_actor()
-        if aether_actor then
-            console.print("Targeting Aether actor.")
-            bomber:bomb_to(aether_actor:get_position())
+        console.print("Targeting Pylon and interacting with it.")
+        tracker.victory_lap = nil
+        if utils.distance_to(pylon) > 2 then
+            bomber:bomb_to(pylon:get_position())
         else
-            console.print("Targeting Pylon and interacting with it.")
-            if utils.distance_to(pylon) > 2 then
-                bomber:bomb_to(pylon:get_position())
-            else
-                console.print("interacting with pylon")
-                interact_object(pylon)
-            end
+            console.print("interacting with pylon")
+            interact_object(pylon)
+            -- reset move index on new wave
+            move_index = 1
         end
         last_enemy_check_time = current_time
         return
@@ -347,6 +331,7 @@ function bomber:main_pulse()
             bomber:bomb_to(target:get_position())
         else
             console.print("Target " .. name .. " in range. Performing circular shooting.")
+            tracker.victory_lap = nil
             bomber:shoot_in_circle()
         end
         last_enemy_check_time = current_time
@@ -364,11 +349,14 @@ function bomber:main_pulse()
         if settings.merry_go_round then
             local left_positions = {
                 horde_left_position,
+                horde_center_position,
                 horde_right_position,
                 horde_bottom_position,
+                horde_center_position,
             }
             local right_positions = {
                 horde_right_position,
+                horde_center_position,
                 horde_left_position,
                 horde_bottom_position,
             }

@@ -16,6 +16,52 @@ local salvage_state = {
     FINISHED = "FINISHED",
 }
 
+local uber_table = {
+    { name = "Tyrael's Might", sno = 1901484 },
+    { name = "The Grandfather", sno = 223271 },
+    { name = "Andariel's Visage", sno = 241930 },
+    { name = "Ahavarion, Spear of Lycander", sno = 359165 },
+    { name = "Doombringer", sno = 221017 },
+    { name = "Harlequin Crest", sno = 609820 },
+    { name = "Melted Heart of Selig", sno = 1275935 },
+    { name = "‍Ring of Starless Skies", sno = 1306338 }
+}
+
+
+function is_uber_item(sno_to_check)
+    for _, entry in ipairs(uber_table) do
+        if entry.sno == sno_to_check then
+            return true
+        end
+    end
+    return false
+end
+
+
+function salvage_low_greater_affix_items()
+    local local_player = get_local_player()
+    if not local_player then
+        return
+    end
+
+
+    local inventory_items = local_player:get_inventory_items()
+    for _, inventory_item in pairs(inventory_items) do
+        if inventory_item and not inventory_item:is_locked() then
+            local display_name = inventory_item:get_display_name()
+            local greater_affix_count = utils.get_greater_affix_count(display_name)
+            local item_id = inventory_item:get_sno_id()
+
+
+            -- Check if the item is not an uber item and has less than 2 greater affixes
+            if greater_affix_count < 2 and not is_uber_item(item_id) then
+                loot_manager.salvage_specific_item(inventory_item)
+            end
+        end
+    end
+end
+
+
 local town_salvage_task = {
     name = "Town Salvage",
     current_state = salvage_state.INIT,
@@ -29,9 +75,15 @@ local town_salvage_task = {
     last_salvage_completion_check_time = 0,
     last_portal_interaction_time = 0,
 
+    
+    
+
+
+
+
     shouldExecute = function()
         local player = get_local_player()
-        local item_count = player:get_item_count()
+        local item_count = utils.is_inventory_full()
         local in_cerrigar = utils.player_in_zone("Scos_Cerrigar")
         local gold_chest_exists = utils.get_chest(enums.chest_types["GOLD"]) ~= nil
     
@@ -41,8 +93,9 @@ local town_salvage_task = {
         end
     
         -- If we're not in Cerrigar, we need both high item count and a gold chest to start
-        return item_count >= 2 and 
+        return utils.is_inventory_full() and 
                settings.salvage and
+               tracker.needs_salvage and
                gold_chest_exists
     end,
 
@@ -77,12 +130,11 @@ local town_salvage_task = {
 
     init_salvage = function(self)
         console.print("Initializing salvage process")
-        if not utils.player_in_zone("Scos_Cerrigar") and get_local_player():get_item_count() >= 1 then
+        if not utils.player_in_zone("Scos_Cerrigar") and get_local_player():get_item_count() >= 15 then
             self.current_state = salvage_state.TELEPORTING
             self.teleport_start_time = get_time_since_inject()
             self.teleport_attempts = 0
             self:teleport_to_town()
-            tracker.needs_salvage = true
             console.print("Player not in Cerrigar, initiating teleport")
         else
             self.current_state = salvage_state.MOVING_TO_BLACKSMITH
@@ -170,14 +222,14 @@ local town_salvage_task = {
         
         if not self.interaction_time or current_time - self.interaction_time >= 5 then
             if not self.last_salvage_time then
-                loot_manager.salvage_all_items()
+                salvage_low_greater_affix_items()
                 self.last_salvage_time = current_time
                 console.print("Salvage action performed, waiting 2 seconds before checking results")
             elseif current_time - self.last_salvage_time >= 2 then
                 local item_count = get_local_player():get_item_count()
                 console.print("Current item count: " .. item_count)
                 
-                if item_count <= 1 then
+                if item_count <= 32 then
                     tracker.has_salvaged = true
                     console.print("Salvage complete, item count is 15 or less. Moving to portal")
                     self.current_state = salvage_state.MOVING_TO_PORTAL
@@ -221,7 +273,6 @@ local town_salvage_task = {
             elseif current_time - self.portal_interact_time < 2 then
                 console.print("Interacting with the portal.")
                 interact_object(portal)
-                tracker.has_salvaged = false
                 self:reset()
             elseif current_time - self.portal_interact_time < 5 then
                 console.print(string.format("Waiting at portal... Time elapsed: %.2f seconds", current_time - self.portal_interact_time))
@@ -239,12 +290,11 @@ local town_salvage_task = {
 
     finish_salvage = function(self)
         console.print("Finishing salvage task")
-        tracker.has_salvaged = false
+        tracker.has_salvaged = true
         tracker.needs_salvage = false
         self.current_state = salvage_state.INIT
         self.current_retries = 0
         console.print("Town salvage task finished")
-        tracker.finished_chest_looting = false
     end,
 
     reset = function(self)
@@ -253,19 +303,7 @@ local town_salvage_task = {
         self.portal_interact_time = 0
         self.reset_salvage_time = 0
         self.current_retries = 0
-        tracker.has_salvaged = false
-        tracker.needs_salvage = false
         console.print("Reset town_salvage_task and related tracker flags")
-        self.current_chest_type = nil
-        self.failed_attempts = 0
-        self.current_chest_index = nil-- Reset the timer during reset
-        tracker.finished_chest_looting = false
-        tracker.ga_chest_opened = false
-        tracker.selected_chest_opened = false
-        tracker.gold_chest_opened = false
-        console.print("Reset open_chests_task and related tracker flags")
-
-    
     end,
 }
 

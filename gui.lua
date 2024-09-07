@@ -1,5 +1,5 @@
 local gui = {}
-local plugin_label = "Infernal Horde - Dev Edition"
+local plugin_label = "Infernal Horde - Letrico Edition"
 
 local function create_checkbox(key)
     return checkbox:new(false, get_hash(plugin_label .. "_" .. key))
@@ -30,6 +30,7 @@ gui.elements = {
     melee_logic = create_checkbox("melee_logic"),
     elite_only_toggle = create_checkbox("elite_only"),
     salvage_toggle = create_checkbox("salvage_toggle"),
+    aggresive_movement_toggle = create_checkbox("aggresive_movement_toggle"),
     path_angle_slider = slider_int:new(0, 360, 10, get_hash("path_angle_slider")), -- 10 is a default value
     chest_type_selector = combo_box:new(0, get_hash("chest_type_selector")),
     failover_chest_type_selector = combo_box:new(0, get_hash("failover_chest_type_selector")),
@@ -42,16 +43,18 @@ gui.elements = {
 }
 
 function gui.render()
-    if not gui.elements.main_tree:push("Infernal Horde - Dev Edition") then return end
+    if not gui.elements.main_tree:push("Infernal Horde - Letrico Edition") then return end
 
     gui.elements.main_toggle:render("Enable", "Enable the bot")
     
     if gui.elements.settings_tree:push("Settings") then
         gui.elements.melee_logic:render("Melee", "Do we need to move into Melee?")
-        gui.elements.elite_only_toggle:render("Elite Only", "Do we only want to seek out elites in the Pit?")   
+        gui.elements.elite_only_toggle:render("Elite Only", "Do we only want to seek out elites in the Pit?") 
+        gui.elements.aggresive_movement_toggle:render("Aggresive movement", "Move directly to target, will fight close to target")  
+        if not gui.elements.aggresive_movement_toggle:get() then
+            gui.elements.path_angle_slider:render("Path Angle", "Adjust the angle for path filtering (0-360 degrees)")
+        end
         gui.elements.salvage_toggle:render("Salvage", "Enable salvaging items")
-        gui.elements.path_angle_slider:render("Path Angle", "Adjust the angle for path filtering (0-360 degrees)")
-        
         -- Updated chest type selector to use the new enum structure
         gui.elements.chest_type_selector:render("Chest Type", gui.chest_types_options, "Select the type of chest to open")
         if gui.elements.chest_type_selector:get() == 0 and not gui.elements.salvage_toggle:get() then
