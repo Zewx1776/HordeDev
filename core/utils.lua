@@ -2,6 +2,15 @@ local settings = require "core.settings"
 local enums    = require "data.enums"
 local utils    = {}
 
+function utils.get_greater_affix_count(display_name)
+    local count = 0
+    for _ in display_name:gmatch("GreaterAffix") do
+       count = count + 1
+    end
+    return count
+end
+
+
 function utils.distance_to(target)
     local player_pos = get_player_position()
     local target_pos
