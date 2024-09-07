@@ -602,8 +602,8 @@ local function move_to_target()
 
         local next_point = current_path[path_index]
         if next_point and not next_point:is_zero() then
-            --pathfinder.request_move(next_point)
-            pathfinder.force_move(next_point)
+            pathfinder.request_move(next_point)
+            --pathfinder.force_move(next_point)
         end
 
         if next_point and next_point.x and not next_point:is_zero() and calculate_distance(player_pos, next_point) < grid_size then
