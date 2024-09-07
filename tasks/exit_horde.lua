@@ -38,7 +38,8 @@ exit_horde_task = {
         -- Check for the presence of the gold chest
         local gold_chest = utils.get_chest(enums.chest_types["GOLD"])
         if gold_chest then
-            console.print("No gold chest found. Exiting.")
+            console.print("Gold chest found. Back to open_chest task")
+            tracker.gold_chest_opened = false
             return
         end
 

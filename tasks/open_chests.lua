@@ -54,37 +54,6 @@ local open_chests_task = {
         local current_time = get_time_since_inject()
         console.print("Current state: " .. self.current_state)
     
-        -- -- Add a delay after returning from salvage
-        -- if self.returning_from_salvage then
-        --     if not self.salvage_return_time then
-        --         self.salvage_return_time = current_time
-        --     elseif current_time - self.salvage_return_time > 5 then -- 5 second delay
-        --         self.returning_from_salvage = false
-        --         self.salvage_return_time = nil
-        --         console.print("Resuming chest opening after salvage")
-        --     else
-        --         console.print("Waiting before resuming chest opening")
-        --         return
-        --     end
-        -- end
-    
-        -- if tracker.needs_salvage then
-        --     if self.current_state ~= chest_state.PAUSED_FOR_SALVAGE then
-        --         self.state_before_pause = self.current_state
-        --         self.current_state = chest_state.PAUSED_FOR_SALVAGE
-        --         console.print("Pausing chest opening for salvage")
-        --     end
-        --     return
-        -- elseif self.current_state == chest_state.PAUSED_FOR_SALVAGE then
-        --     self.current_state = self.state_before_pause
-        --     self.state_before_pause = nil
-        --     self.returning_from_salvage = true
-        --     console.print("Returning from salvage")
-        --     return
-        -- end
-
-        
-    
         if tracker.has_salvaged then
             self:return_from_salvage()
         elseif self.current_state == chest_state.PAUSED_FOR_SALVAGE then
@@ -291,7 +260,7 @@ local open_chests_task = {
                         console.print("Found chest: " .. actor:get_skin_name() .. ", Distance: " .. utils.distance_to(actor))
                     end
                 end
-                self.current_state = chest_state.INIT
+                self.current_state = chest_state.FINISHED
                 console.print("Set tracker.finished_chest_looting to true due to chest not found")
             end
         end
