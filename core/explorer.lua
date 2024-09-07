@@ -499,6 +499,34 @@ end
 
 local last_a_star_call = 0.0
 
+
+
+
+local function check_if_stuck()
+    --console.print("Checking if character is stuck.")
+    local current_pos = get_player_position()
+    local current_time = os.time()
+
+    if last_position and calculate_distance(current_pos, last_position) < 0.1 then
+        if current_time - last_move_time > stuck_threshold then
+            return true
+        end
+    else
+        last_move_time = current_time
+    end
+
+    last_position = current_pos
+
+    return false
+end
+
+explorer.check_if_stuck = check_if_stuck
+
+function explorer:set_custom_target(target)
+    console.print("Setting custom target.")
+    target_position = target
+end
+
 local function move_to_target()
     if explorer.is_task_running then
         return  -- Do not set a path if a task is running
@@ -548,41 +576,31 @@ local function move_to_target()
             path_index = 1
         end
     else
-        -- Potentially handle case when there's no target_position
+        -- Move to center if no target
+        console.print("No target found. Moving to center.")
+        pathfinder.force_move_raw(vec3:new(9.204102, 8.915039, 0.000000))
     end
 end
 
-
-local function check_if_stuck()
-    --console.print("Checking if character is stuck.")
-    local current_pos = get_player_position()
-    local current_time = os.time()
-
-    if last_position and calculate_distance(current_pos, last_position) < 0.1 then
-        if current_time - last_move_time > stuck_threshold then
-            return true
-        end
+local function move_to_target_aggresive()
+    if target_position then
+        pathfinder.force_move_raw(target_position)
     else
-        last_move_time = current_time
+        -- Move to center if no target
+        console.print("No target found. Moving to center.")
+        pathfinder.force_move_raw(vec3:new(9.204102, 8.915039, 0.000000))
     end
-
-    last_position = current_pos
-
-    return false
 end
 
-explorer.check_if_stuck = check_if_stuck
-
-function explorer:set_custom_target(target)
-    console.print("Setting custom target.")
-    target_position = target
-end
-
--- Expose the move_to_target function
 function explorer:move_to_target()
     console.print("moving to target")
-    move_to_target()
+    if settings.aggresive_movement then
+        move_to_target_aggresive()
+    else
+        move_to_target()
+    end
 end
+
 
 local last_call_time = 0.0
 local is_player_on_quest = false

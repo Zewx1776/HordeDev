@@ -31,7 +31,7 @@ local town_salvage_task = {
 
     shouldExecute = function()
         local player = get_local_player()
-        local item_count = player:get_item_count()
+        local item_count = utils.is_inventory_full()
         local in_cerrigar = utils.player_in_zone("Scos_Cerrigar")
         local gold_chest_exists = utils.get_chest(enums.chest_types["GOLD"]) ~= nil
     
@@ -41,8 +41,9 @@ local town_salvage_task = {
         end
     
         -- If we're not in Cerrigar, we need both high item count and a gold chest to start
-        return item_count >= 25 and 
+        return utils.is_inventory_full() and 
                settings.salvage and
+               tracker.needs_salvage and
                gold_chest_exists
     end,
 
@@ -82,7 +83,6 @@ local town_salvage_task = {
             self.teleport_start_time = get_time_since_inject()
             self.teleport_attempts = 0
             self:teleport_to_town()
-            tracker.needs_salvage = true
             console.print("Player not in Cerrigar, initiating teleport")
         else
             self.current_state = salvage_state.MOVING_TO_BLACKSMITH
@@ -177,15 +177,15 @@ local town_salvage_task = {
                 local item_count = get_local_player():get_item_count()
                 console.print("Current item count: " .. item_count)
                 
-                if item_count <= 15 then
+                if item_count <= 1 then
                     tracker.has_salvaged = true
                     console.print("Salvage complete, item count is 15 or less. Moving to portal")
-                    self.current_state = salvage_state.MOVING_TO_PORTAL
+                    self.current_state = salvage_state.FINISHED
                 else
                     console.print("Item count is still above 15, retrying salvage")
                     self.current_retries = self.current_retries + 1
                     if self.current_retries >= self.max_retries then
-                        console.print("Max retries reached. Resetting task.")
+                        console.print("Max retries reached numb2. Resetting task.")
                         self:reset()
                     else
                         self.last_salvage_time = nil  -- Reset this to allow immediate salvage on next cycle
@@ -221,7 +221,6 @@ local town_salvage_task = {
             elseif current_time - self.portal_interact_time < 2 then
                 console.print("Interacting with the portal.")
                 interact_object(portal)
-                tracker.has_salvaged = false
                 self:reset()
             elseif current_time - self.portal_interact_time < 5 then
                 console.print(string.format("Waiting at portal... Time elapsed: %.2f seconds", current_time - self.portal_interact_time))
@@ -239,11 +238,11 @@ local town_salvage_task = {
 
     finish_salvage = function(self)
         console.print("Finishing salvage task")
-        tracker.has_salvaged = false
+        tracker.has_salvaged = true
         tracker.needs_salvage = false
-        self.current_state = salvage_state.INIT
         self.current_retries = 0
         console.print("Town salvage task finished")
+        self.current_state = salvage_state.MOVING_TO_PORTAL
     end,
 
     reset = function(self)
@@ -251,8 +250,7 @@ local town_salvage_task = {
         self.current_state = salvage_state.INIT
         self.portal_interact_time = 0
         self.reset_salvage_time = 0
-        tracker.has_salvaged = false
-        tracker.needs_salvage = false
+        self.current_retries = 0
         console.print("Reset town_salvage_task and related tracker flags")
     end,
 }

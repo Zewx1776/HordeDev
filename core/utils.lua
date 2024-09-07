@@ -273,11 +273,15 @@ function utils.get_aether_actor()
     local actors = actors_manager:get_all_actors()
     for _, actor in pairs(actors) do
         local name = actor:get_skin_name()
-        if name == "BurningAether" or name == "S05_Reputation_Experience_PowerUp_Actor" then
+        if name == "BurningAether" or (settings.loot_mothers_gift and name == "S05_Reputation_Experience_PowerUp_Actor") then
             return actor
         end
     end
     return nil
 end
+
+function utils.is_inventory_full()
+    return get_local_player():get_item_count() == 33
+ end
 
 return utils

@@ -20,9 +20,9 @@ local enter_horde_task = {
     shouldExecute = function()
         return utils.player_in_zone("Kehj_Caldeum") and tracker.horde_opened
     end,
-    Execute = function()
+    Execute = function(self)
         enter_horde()
-        enter_horde_task:reset()  -- Triggering the reset after entering the horde
+        self:reset()
     end,
     reset = function(self)
         tracker.finished_chest_looting = false
