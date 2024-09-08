@@ -60,7 +60,7 @@ function gui.render()
         end
         gui.elements.salvage_toggle:render("Salvage", "Enable salvaging items")
         if gui.elements.chest_type_selector:get() == 0 and gui.elements.salvage_toggle:get() then
-            gui.elements.use_salvage_filter_toggle:render("Use salvage filter logic", "Salvage based on filter logic. Update filter.lua") 
+            gui.elements.use_salvage_filter_toggle:render("Use salvage filter logic (update filter.lua)", "Salvage based on filter logic. Update filter.lua") 
             if gui.elements.chest_type_selector:get() == 0 and gui.elements.salvage_toggle:get() and gui.elements.use_salvage_filter_toggle:get() then
                 gui.elements.affix_salvage_count:render("Min No. affixes to keep", "Select number of affixes for salvage logic")
             end
