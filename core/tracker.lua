@@ -34,6 +34,12 @@ function tracker.check_time(key, delay)
     return false
 end
 
+function tracker.set_teleported_from_town(value)
+
+    tracker.teleported_from_town = value
+
+end
+
 -- The plan is to have a separate table that stores all the key added by check_time and clear them all on exit
 function tracker.clear_key(key)
     tracker[key] = nil
