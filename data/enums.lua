@@ -16,9 +16,8 @@ local enums = {
         obelisk_position = vec3:new(-1659.1735839844, -613.06573486328, 37.2822265625),
         blacksmith_position = vec3:new(-1685.5394287109, -596.86566162109, 37.6484375),
         jeweler_position = vec3:new(-1658.699219, -620.020508, 37.888672), 
-        portal_position = vec3:new(-1656.7141113281, -598.21716308594, 36.28515625) 
-        
-        
+        portal_position = vec3:new(-1656.7141113281, -598.21716308594, 36.28515625), 
+        portal_door = vec3:new(28.782243728638, -479.67123413086, -24.51171875) 
     },
     chest_types = {
         [0] = "BSK_UniqueOpChest_Gear",
@@ -34,6 +33,7 @@ local enums = {
     },
     waypoints = {
         CERRIGAR = 0x76D58,
+        LIBRARY = 0x10D63D
     },
 }
 

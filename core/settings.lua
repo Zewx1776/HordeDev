@@ -16,9 +16,9 @@ function settings:update_settings()
     settings.elites_only = gui.elements.elite_only_toggle:get()
     settings.salvage = gui.elements.salvage_toggle:get() -- Change this line
     settings.aggresive_movement = gui.elements.aggresive_movement_toggle:get() -- Finn's movement logic
-    settings.aggresive_movement = gui.elements.aggresive_movement_toggle:get() -- Finn's movement logic
     settings.path_angle = gui.elements.path_angle_slider:get()
     settings.selected_chest_type = gui.elements.chest_type_selector:get()
+    settings.failover_chest_type = gui.elements.failover_chest_type_selector:get()
     settings.failover_chest_type = gui.elements.failover_chest_type_selector:get()
     settings.always_open_ga_chest = gui.elements.always_open_ga_chest:get()
     settings.loot_mothers_gift = gui.elements.loot_mothers_gift:get()

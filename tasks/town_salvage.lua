@@ -91,6 +91,12 @@ local town_salvage_task = {
     last_salvage_completion_check_time = 0,
     last_portal_interaction_time = 0,
 
+    
+    
+
+
+
+
     shouldExecute = function()
         local player = get_local_player()
         local item_count = utils.is_inventory_full()
@@ -255,7 +261,7 @@ local town_salvage_task = {
                     console.print("Item count is still above 15, retrying salvage")
                     self.current_retries = self.current_retries + 1
                     if self.current_retries >= self.max_retries then
-                        console.print("Max retries reached. Resetting task.")
+                        console.print("Max retries reached numb2. Resetting task.")
                         self:reset()
                     else
                         self.last_salvage_time = nil  -- Reset this to allow immediate salvage on next cycle

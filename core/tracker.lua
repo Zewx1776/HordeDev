@@ -19,6 +19,7 @@ local tracker = {
     victory_positions = nil,
     locked_door_found = false,
     boss_killed = false,
+    teleported_from_town = false,
     keep_items = 0
 }
 
