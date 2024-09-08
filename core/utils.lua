@@ -283,7 +283,6 @@ function utils.get_aether_actor()
     for _, actor in pairs(actors) do
         local name = actor:get_skin_name()
         if name == "BurningAether" or (settings.loot_mothers_gift and name == "S05_Reputation_Experience_PowerUp_Actor") then
-        if name == "BurningAether" or (settings.loot_mothers_gift and name == "S05_Reputation_Experience_PowerUp_Actor") then
             return actor
         end
     end
