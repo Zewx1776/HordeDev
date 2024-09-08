@@ -280,6 +280,14 @@ function utils.get_aether_actor()
     return nil
 end
 
+function utils.get_greater_affix_count(display_name)
+    local count = 0
+    for _ in string.gmatch(display_name, "GreaterAffix") do
+        count = count + 1
+    end
+    return count
+end
+
 function utils.is_inventory_full()
     return get_local_player():get_item_count() == 33
  end

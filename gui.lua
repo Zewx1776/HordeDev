@@ -41,6 +41,7 @@ gui.elements = {
     boss_kill_delay = slider_int:new(1, 10, 6, get_hash("boss_kill_delay")), -- 6 is a default value
     chest_move_attempts = slider_int:new(20, 400, 40, get_hash("chest_move_attempts")), -- 20 is a default value
     use_salvage_filter_toggle = checkbox:new(false, get_hash("use_salvage_filter_toggle")),
+    greater_affix_count = slider_int:new(0, 3, 0, get_hash("greater_affix_count")), -- 0 is the default value
     affix_salvage_count = slider_int:new(1, 3, 1, get_hash("affix_salvage_count")), -- 1 is a default value
     movement_spell_to_objective = checkbox:new(false, get_hash("movement_spell_to_objective")),
 }
@@ -62,7 +63,8 @@ function gui.render()
         if gui.elements.chest_type_selector:get() == 0 and gui.elements.salvage_toggle:get() then
             gui.elements.use_salvage_filter_toggle:render("Use salvage filter logic (update filter.lua)", "Salvage based on filter logic. Update filter.lua") 
             if gui.elements.chest_type_selector:get() == 0 and gui.elements.salvage_toggle:get() and gui.elements.use_salvage_filter_toggle:get() then
-                gui.elements.affix_salvage_count:render("Min No. affixes to keep", "Select number of affixes for salvage logic")
+                gui.elements.greater_affix_count:render("Min Greater Affixes to Keep", "Select minimum number of Greater Affixes to keep an item (0-3, 0 = off)")
+                gui.elements.affix_salvage_count:render("Min No. affixes to keep", "Minimum number of matching affixes to keep")
             end
         end
         -- Updated chest type selector to use the new enum structure

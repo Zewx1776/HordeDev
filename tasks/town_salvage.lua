@@ -28,52 +28,50 @@ local function salvage_low_greater_affix_items()
         if inventory_item then
             -- Check if the item is locked
             if inventory_item:is_locked() then
-                -- Add into keep_items count
                 tracker.keep_items = tracker.keep_items + 1
                 goto continue
             end
 
             local skin_name = inventory_item:get_name()
-            local display_name = inventory_item:get_display_name()  -- Added get_display_name for GreaterAffix check
-            local filter_table = affix_filter:get_filter(skin_name)
-        
-            if filter_table then
-                local item_affixes = inventory_item:get_affixes()
+            local display_name = inventory_item:get_display_name()
+            local greater_affix_count = utils.get_greater_affix_count(display_name)
+            
+            -- Greater Affix check
+            local passes_greater_affix_check = settings.greater_affix_count == 0 or greater_affix_count >= settings.greater_affix_count
 
-                if #item_affixes > 2 then
-                    local found_affixes = 0
-                    local has_greater_affix = string.find(display_name, "GreaterAffix") ~= nil
+            -- Only proceed to check item affixes if Greater Affix check passes
+            if passes_greater_affix_check then
+                local filter_table = affix_filter:get_filter(skin_name)
+            
+                if filter_table then
+                    local item_affixes = inventory_item:get_affixes()
 
-                    for _, affix in pairs(item_affixes) do
-                        if affix then
-                            for _, filter_entry in pairs(filter_table) do
-                                if filter_entry.sno_id == affix.affix_name_hash then
-                                    found_affixes = found_affixes + 1
-                                    break
+                    if #item_affixes > 2 then
+                        local found_affixes = 0
+
+                        for _, affix in pairs(item_affixes) do
+                            if affix then
+                                for _, filter_entry in pairs(filter_table) do
+                                    if filter_entry.sno_id == affix.affix_name_hash then
+                                        found_affixes = found_affixes + 1
+                                        break
+                                    end
                                 end
                             end
                         end
-                    end
 
-                    if has_greater_affix and found_affixes >= settings.affix_salvage_count then
-                        -- Add into keep_items count
-                        tracker.keep_items = tracker.keep_items + 1
-                        goto continue -- Skip to next item
-                    elseif not has_greater_affix or (has_greater_affix and found_affixes < settings.affix_salvage_count) then
-                        if not affix_filter:is_uber_item(inventory_item:get_sno_id()) then
-                            loot_manager.salvage_specific_item(inventory_item)
+                        if found_affixes >= settings.affix_salvage_count then
+                            -- Keep item only if both Greater Affix and item affix conditions are met
+                            tracker.keep_items = tracker.keep_items + 1
+                            goto continue
                         end
                     end
-
-                    -- Check if the item should be salvaged based on the slider value
-                    if has_greater_affix and found_affixes < settings.affix_salvage_count then
-                        if not affix_filter:is_uber_item(inventory_item:get_sno_id()) then
-                            loot_manager.salvage_specific_item(inventory_item)
-                        end
-                    end
-                else
-                    loot_manager.salvage_specific_item(inventory_item)
                 end
+            end
+
+            -- If we reach here, the item didn't meet both conditions, so salvage it
+            if not affix_filter:is_uber_item(inventory_item:get_sno_id()) then
+                loot_manager.salvage_specific_item(inventory_item)
             end
         end
         ::continue::
