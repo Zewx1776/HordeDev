@@ -51,18 +51,35 @@ local function is_objective(actor)
     local health = actor:get_current_health()
     local name = actor:get_skin_name()
 
-    if name:match("Soulspire") and health > 1 then
-        return true
-    elseif (name:match("Mass") or name:match("Zombie")) and health > 1 then
-        return true
-    elseif name == "MarkerLocation_BSK_Occupied" then
-        return true
-    elseif name:match("BSK_HellSeeker") then
-        return true
-    elseif name:match("S05_coredemon") then
-        return true
+    -- Patterns that require health check
+    local health_check_patterns = {
+        "Soulspire",
+        "Mass",
+        "Zombie"
+    }
+
+    -- Patterns that don't require health check
+    local no_health_check_patterns = {
+        "BSK_HellSeeker",
+        "S05_coredemon",
+        "S05_fallen",
+        "MarkerLocation_BSK_Occupied"
+    }
+
+    -- Check patterns with health condition
+    for _, pattern in ipairs(health_check_patterns) do
+        if name:match(pattern) and health > 1 then
+            return true
+        end
     end
-    
+
+    -- Check patterns without health condition
+    for _, pattern in ipairs(no_health_check_patterns) do
+        if name:match(pattern) then
+            return true
+        end
+    end
+
     return false
 end
 
