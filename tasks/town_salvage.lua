@@ -3,6 +3,7 @@ local enums = require "data.enums"
 local explorer = require "core.explorer"
 local settings = require "core.settings"
 local tracker = require "core.tracker"
+local affix_filter = require "core.affix_filter"
 local gui = require "gui"
 
 local salvage_state = {
@@ -15,6 +16,69 @@ local salvage_state = {
     INTERACTING_WITH_PORTAL = "INTERACTING_WITH_PORTAL",
     FINISHED = "FINISHED",
 }
+
+local function salvage_low_greater_affix_items()
+    local local_player = get_local_player()
+    if not local_player then
+        return
+    end
+
+    local inventory_items = local_player:get_inventory_items()
+    for _, inventory_item in pairs(inventory_items) do
+        if inventory_item then
+            -- Check if the item is locked
+            if inventory_item:is_locked() then
+                -- Add into keep_items count
+                tracker.keep_items = tracker.keep_items + 1
+                goto continue
+            end
+
+            local skin_name = inventory_item:get_name()
+            local display_name = inventory_item:get_display_name()  -- Added get_display_name for GreaterAffix check
+            local filter_table = affix_filter:get_filter(skin_name)
+        
+            if filter_table then
+                local item_affixes = inventory_item:get_affixes()
+
+                if #item_affixes > 2 then
+                    local found_affixes = 0
+                    local has_greater_affix = string.find(display_name, "GreaterAffix") ~= nil
+
+                    for _, affix in pairs(item_affixes) do
+                        if affix then
+                            for _, filter_entry in pairs(filter_table) do
+                                if filter_entry.sno_id == affix.affix_name_hash then
+                                    found_affixes = found_affixes + 1
+                                    break
+                                end
+                            end
+                        end
+                    end
+
+                    if has_greater_affix and found_affixes >= settings.affix_salvage_count then
+                        -- Add into keep_items count
+                        tracker.keep_items = tracker.keep_items + 1
+                        goto continue -- Skip to next item
+                    elseif not has_greater_affix or (has_greater_affix and found_affixes < settings.affix_salvage_count) then
+                        if not affix_filter:is_uber_item(inventory_item:get_sno_id()) then
+                            loot_manager.salvage_specific_item(inventory_item)
+                        end
+                    end
+
+                    -- Check if the item should be salvaged based on the slider value
+                    if has_greater_affix and found_affixes < settings.affix_salvage_count then
+                        if not affix_filter:is_uber_item(inventory_item:get_sno_id()) then
+                            loot_manager.salvage_specific_item(inventory_item)
+                        end
+                    end
+                else
+                    loot_manager.salvage_specific_item(inventory_item)
+                end
+            end
+        end
+        ::continue::
+    end
+end
 
 local town_salvage_task = {
     name = "Town Salvage",
@@ -170,14 +234,22 @@ local town_salvage_task = {
         
         if not self.interaction_time or current_time - self.interaction_time >= 5 then
             if not self.last_salvage_time then
-                loot_manager.salvage_all_items()
-                self.last_salvage_time = current_time
+                if settings.use_salvage_filter_toggle then
+                    console.print("Salvaging items with filter logic")
+                    salvage_low_greater_affix_items()
+                    self.last_salvage_time = current_time
+                else
+                    console.print("Salvaging all items")
+                    loot_manager.salvage_all_items()
+                    self.last_salvage_time = current_time
+                end
                 console.print("Salvage action performed, waiting 2 seconds before checking results")
             elseif current_time - self.last_salvage_time >= 2 then
                 local item_count = get_local_player():get_item_count()
                 console.print("Current item count: " .. item_count)
+                console.print("Current keep_items count: " .. tostring(tracker.keep_items))
                 
-                if item_count <= 1 then
+                if item_count <= 1 or (settings.use_salvage_filter_toggle and tracker.keep_items == item_count) then
                     tracker.has_salvaged = true
                     console.print("Salvage complete, item count is 15 or less. Moving to portal")
                     self.current_state = salvage_state.FINISHED
@@ -185,7 +257,7 @@ local town_salvage_task = {
                     console.print("Item count is still above 15, retrying salvage")
                     self.current_retries = self.current_retries + 1
                     if self.current_retries >= self.max_retries then
-                        console.print("Max retries reached numb2. Resetting task.")
+                        console.print("Max retries reached. Resetting task.")
                         self:reset()
                     else
                         self.last_salvage_time = nil  -- Reset this to allow immediate salvage on next cycle
@@ -240,6 +312,7 @@ local town_salvage_task = {
         console.print("Finishing salvage task")
         tracker.has_salvaged = true
         tracker.needs_salvage = false
+        tracker.keep_items = 0
         self.current_retries = 0
         console.print("Town salvage task finished")
         self.current_state = salvage_state.MOVING_TO_PORTAL

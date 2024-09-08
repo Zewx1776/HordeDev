@@ -19,6 +19,7 @@ local tracker = {
     victory_positions = nil,
     locked_door_found = false,
     boss_killed = false,
+    keep_items = 0
 }
 
 function tracker.check_time(key, delay)

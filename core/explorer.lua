@@ -527,6 +527,30 @@ function explorer:set_custom_target(target)
     target_position = target
 end
 
+function explorer:movement_spell_to_target(target)
+    local local_player = get_local_player()
+    if not local_player then return end
+
+    local movement_spell_id = {
+        288106, -- Sorcerer teleport
+        337031, -- Rogue dash
+    }
+    -- Check if the dash spell is off cooldown and ready to cast
+    for _, spell_id in ipairs(movement_spell_id) do
+        if local_player:is_spell_ready(spell_id) then
+            -- Cast the dash spell towards the target's position
+            local success = cast_spell.position(spell_id, target, 0)  -- No need for hardcoded cast_delay
+            if success then
+                console.print("Successfully used movement spell to target.")
+            else
+                console.print("Failed to use movement spell.")
+            end
+        else
+            console.print("Movement spell on cooldown.")
+        end
+    end
+end
+
 local function move_to_target()
     if explorer.is_task_running then
         return  -- Do not set a path if a task is running

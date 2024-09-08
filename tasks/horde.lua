@@ -47,6 +47,24 @@ local function get_player_pos()
     return get_player_position()
 end
 
+local function is_objective(actor)
+    local health = actor:get_current_health()
+    local name = actor:get_skin_name()
+
+    if name:match("Soulspire") and health > 1 then
+        return true
+    elseif (name:match("Mass") or name:match("Zombie")) and health > 1 then
+        return true
+    elseif name == "MarkerLocation_BSK_Occupied" then
+        return true
+    elseif name:match("BSK_HellSeeker") then
+        return true
+    elseif name:match("S05_coredemon") then
+        return true
+    end
+    
+    return false
+end
 
 -- Function to check if all waves are cleared
 function bomber:all_waves_cleared()
@@ -327,8 +345,14 @@ function bomber:main_pulse()
     if target then
         local name = target:get_skin_name()
         if utils.distance_to(target) > 1.5 then
-            console.print("Moving to target: " .. name)  -- Print target name
-            bomber:bomb_to(target:get_position())
+            if settings.movement_spell_to_objective and is_objective(target) then
+                console.print("Movement spell to target: " .. name)  -- Print target name
+                bomber:bomb_to(target:get_position())
+                explorer:movement_spell_to_target(target:get_position())
+            else
+                console.print("Moving to target: " .. name)  -- Print target name
+                bomber:bomb_to(target:get_position())
+            end
         else
             console.print("Target " .. name .. " in range. Performing circular shooting.")
             tracker.victory_lap = nil
