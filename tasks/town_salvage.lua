@@ -91,12 +91,6 @@ local town_salvage_task = {
     last_salvage_completion_check_time = 0,
     last_portal_interaction_time = 0,
 
-    
-    
-
-
-
-
     shouldExecute = function()
         local player = get_local_player()
         local item_count = utils.is_inventory_full()
