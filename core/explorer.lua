@@ -578,13 +578,13 @@ function explorer:movement_spell_to_target(target)
 
     local movement_spell_id = {
         288106, -- Sorcerer teleport
-        337031, -- Rogue dash
+        358761, -- Rogue dash
     }
     -- Check if the dash spell is off cooldown and ready to cast
     for _, spell_id in ipairs(movement_spell_id) do
         if local_player:is_spell_ready(spell_id) then
             -- Cast the dash spell towards the target's position
-            local success = cast_spell.position(spell_id, target, 0)  -- No need for hardcoded cast_delay
+            local success = cast_spell.position(spell_id, target, 3.0) -- A little delay or else rogue goes turbo in dashing
             if success then
                 console.print("Successfully used movement spell to target.")
             else
