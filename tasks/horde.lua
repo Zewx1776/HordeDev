@@ -346,7 +346,7 @@ function bomber:main_pulse()
     local pylon = bomber:get_pylons()    
     if pylon then
         console.print("Targeting Pylon and interacting with it.")
-        tracker.victory_lap = nil
+        tracker.victory_lap = false
         if utils.distance_to(pylon) > 2 then
             bomber:bomb_to(pylon:get_position())
         else
@@ -373,7 +373,6 @@ function bomber:main_pulse()
             end
         else
             console.print("Target " .. name .. " in range. Performing circular shooting.")
-            tracker.victory_lap = nil
             bomber:shoot_in_circle()
         end
         last_enemy_check_time = current_time
