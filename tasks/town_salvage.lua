@@ -39,8 +39,8 @@ local function salvage_low_greater_affix_items()
             -- Greater Affix check
             local passes_greater_affix_check = settings.greater_affix_count == 0 or greater_affix_count >= settings.greater_affix_count
 
-            -- Only proceed to check item affixes if Greater Affix check passes
-            if passes_greater_affix_check then
+            -- Only proceed to check item affixes if Greater Affix check passes and not junk
+            if passes_greater_affix_check and not inventory_item:is_junk() then
                 local filter_table = affix_filter:get_filter(skin_name)
             
                 if filter_table then
