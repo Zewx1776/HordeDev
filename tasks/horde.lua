@@ -55,15 +55,16 @@ local function is_objective(actor)
     local health_check_patterns = {
         "Soulspire",
         "Mass",
-        "Zombie"
+        "Zombie",
+        "BSK_Structure_BonusAether"
     }
 
     -- Patterns that don't require health check
     local no_health_check_patterns = {
         "BSK_HellSeeker",
+        "MarkerLocation_BSK_Occupied",
         "S05_coredemon",
         "S05_fallen",
-        "MarkerLocation_BSK_Occupied"
     }
 
     -- Check patterns with health condition
@@ -158,7 +159,7 @@ function bomber:get_target()
                 end
             end
 
-            if (name:match("Mass") or name:match("Zombie")) and health > 1 then
+            if (name:match("Mass") or name:match("Zombie") or name:match("BSK_Structure_BonusAether")) and health > 1 then
                 if distance_to_actor < closest_mass_distance then
                     closest_mass_distance = distance_to_actor
                     closest_mass = actor

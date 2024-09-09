@@ -60,16 +60,16 @@ function gui.render()
             gui.elements.path_angle_slider:render("Path Angle", "Adjust the angle for path filtering (0-360 degrees)")
         end
         gui.elements.salvage_toggle:render("Salvage", "Enable salvaging items")
-        if gui.elements.chest_type_selector:get() == 0 and gui.elements.salvage_toggle:get() then
+        if gui.elements.salvage_toggle:get() then
             gui.elements.use_salvage_filter_toggle:render("Use salvage filter logic (update filter.lua)", "Salvage based on filter logic. Update filter.lua") 
-            if gui.elements.chest_type_selector:get() == 0 and gui.elements.salvage_toggle:get() and gui.elements.use_salvage_filter_toggle:get() then
+            if gui.elements.salvage_toggle:get() and gui.elements.use_salvage_filter_toggle:get() then
                 gui.elements.greater_affix_count:render("Min Greater Affixes to Keep", "Select minimum number of Greater Affixes to keep an item (0-3, 0 = off)")
                 gui.elements.affix_salvage_count:render("Min No. affixes to keep", "Minimum number of matching affixes to keep")
             end
         end
         -- Updated chest type selector to use the new enum structure
         gui.elements.chest_type_selector:render("Chest Type", gui.chest_types_options, "Select the type of chest to open")
-        if gui.elements.chest_type_selector:get() == 0 and not gui.elements.salvage_toggle:get() then
+        if not gui.elements.salvage_toggle:get() then
             gui.elements.failover_chest_type_selector:render("Failover Chest Type When Inventory is full", gui.failover_chest_types_options, "Select the failover type of chest to open when inventory is full")
         end
         gui.elements.always_open_ga_chest:render("Always Open GA Chest", "Toggle to always open Greater Affix chest when available")
