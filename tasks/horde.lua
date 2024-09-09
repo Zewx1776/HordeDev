@@ -401,6 +401,7 @@ function bomber:main_pulse()
                 horde_center_position,
                 horde_left_position,
                 horde_bottom_position,
+                horde_center_position,
             }
             if not tracker.victory_lap then
                 if not tracker.victory_positions then
