@@ -99,6 +99,11 @@ end
 function bomber:shoot_in_circle()
     local current_time = get_time_since_inject()
     local player_position = get_player_position()
+
+    -- Don't move around after killing boss
+    if player_position:dist_to(horde_boss_room_position) < player_position:dist_to(horde_center_position) then
+        return
+    end
     
     -- First, navigate to the horde center position
     if player_position:dist_to(horde_center_position) > 15 then
