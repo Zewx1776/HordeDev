@@ -291,6 +291,12 @@ local open_chests_task = {
     end,
 
     try_next_chest = function(self, was_successful)
+        if self.current_chest_type == "GREATER_AFFIX" then
+            console.print("Wait for awhile after opening GA chest to loot")
+            if not tracker.check_time("open_ga_chest_delay", settings.open_ga_chest_delay) then
+                return
+            end
+        end
         console.print("Trying next chest")
         console.print("Current self.current_chest_type: " .. tostring(self.current_chest_type))
         console.print("Current self.selected_chest_type: " .. tostring(self.selected_chest_type))

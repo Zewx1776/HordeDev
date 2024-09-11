@@ -23,10 +23,13 @@ local tracker = {
     keep_items = 0
 }
 
+local runtime_timer = {}
+
 function tracker.check_time(key, delay)
     local current_time = get_time_since_inject()
     if not tracker[key] then
         tracker[key] = current_time
+        table.insert(runtime_timer, key)
     end
     if current_time - tracker[key] >= delay then
         return true
@@ -35,9 +38,13 @@ function tracker.check_time(key, delay)
 end
 
 function tracker.set_teleported_from_town(value)
-
     tracker.teleported_from_town = value
+end
 
+function tracker.clear_runtime_timers()
+    for _, timer in pairs(runtime_timer) do
+        tracker.clear_key(timer)
+    end
 end
 
 -- The plan is to have a separate table that stores all the key added by check_time and clear them all on exit

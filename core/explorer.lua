@@ -580,6 +580,11 @@ function explorer:movement_spell_to_target(target)
         288106, -- Sorcerer teleport
         358761, -- Rogue dash
     }
+
+    if settings.use_evade_as_movement_spell then
+        table.insert(movement_spell_id, 337031) -- General Evade
+    end
+
     -- Check if the dash spell is off cooldown and ready to cast
     for _, spell_id in ipairs(movement_spell_id) do
         if local_player:is_spell_ready(spell_id) then
