@@ -192,7 +192,7 @@ function bomber:get_target()
                 end
             end
 
-            if target_selector.is_valid_enemy(actor) and not name == "S05_BSK_Rogue_001_Clone" then
+            if target_selector.is_valid_enemy(actor) and not name:match("S05_BSK_Rogue_001_Clone") then
                 if distance_to_actor < closest_monster_distance then
                     closest_monster_distance = distance_to_actor
                     closest_monster = actor

@@ -579,6 +579,7 @@ function explorer:movement_spell_to_target(target)
     local movement_spell_id = {
         288106, -- Sorcerer teleport
         358761, -- Rogue dash
+        355606, -- Rogue shadow step
     }
 
     if settings.use_evade_as_movement_spell then
