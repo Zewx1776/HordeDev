@@ -66,7 +66,7 @@ function gui.render()
         end
         gui.elements.salvage_toggle:render("Salvage", "Enable salvaging items")
         if gui.elements.salvage_toggle:get() then
-            gui.elements.use_salvage_filter_toggle:render("Use salvage filter logic (update filter.lua)", "Salvage based on filter logic. Update filter.lua") 
+            gui.elements.use_salvage_filter_toggle:render("Use salvage filter logic (update filter)", "Salvage based on filter logic. Update filter") 
             if gui.elements.salvage_toggle:get() and gui.elements.use_salvage_filter_toggle:get() then
                 gui.elements.greater_affix_count:render("Min Greater Affixes to Keep", "Select minimum number of Greater Affixes to keep an item (0-3, 0 = off)")
                 gui.elements.affix_salvage_count:render("Min No. affixes to keep", "Minimum number of matching affixes to keep")

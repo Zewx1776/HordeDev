@@ -4,9 +4,6 @@ filter.helm_affix_filter = {
 }
 
 filter.chest_affix_filter = {
-    { sno_id = 1924662, affix_name = "Mana per Second" },
-    { sno_id = 1829566, affix_name = "Intelligence" },
-    { sno_id = 1927016, affix_name = "Teleport" },
 }
 
 filter.gloves_affix_filter = {
@@ -17,49 +14,47 @@ filter.gloves_affix_filter = {
 
 filter.pants_affix_filter = {
     { sno_id = 1829592, affix_name = "Max. Life" },
-    { sno_id = 1829566, affix_name = "Intelligence" },
-    { sno_id = 1834117, affix_name = "Dodge Chance" },
+    { sno_id = 1829562, affix_name = "Dexterity" },
+    { sno_id = 1829554, affix_name = "Armor" },
 }
 
 filter.boots_affix_filter = {
+    { sno_id = 1829562, affix_name = "Dexterity" },
     { sno_id = 1829598, affix_name = "Movement Speed" },
     { sno_id = 1834117, affix_name = "Dodge Chance" },
 }
 
 filter.amulet_affix_filter = {
-    { sno_id = 1928404, affix_name = "Glass Cannon" },
-    { sno_id = 1928406, affix_name = "Conjuration Mastery" },
-    { sno_id = 2072747, affix_name = "All-Stats Unique -- Locran"},
-    { sno_id = 2042418, affix_name = "Critical Damage Unique -- Locran"},
+    { sno_id = 1927653, affix_name = "Alchemical Advantage" },
+    { sno_id = 1927657, affix_name = "Frigid Finesse" },
+    { sno_id = 1927640, affix_name = "Unstable Elixir" },
 }
 
 filter.ring_affix_filter = {
-    { sno_id = 1829556, affix_name = "Attack Speed" },
-    { sno_id = 1829584, affix_name = "Critical Strike Chance" },
-    { sno_id = 1829586, affix_name = "Critical Strike Damage" },
+    { sno_id = 1829562, affix_name = "Dexterity" },
+    { sno_id = 1829592, affix_name = "Max. Life" },
+    { sno_id = 1829590, affix_name = "Damage Over Time" },
+    { sno_id = 1829675, affix_name = "Lucky Hit Chance" },
 }
 
 filter.one_hand_weapons_affix_filter = {
-    { sno_id = 1829562, affix_name = "Intelligence" },
-    { sno_id = 1829586, affix_name = "Critical Strike Damage" },
-    { sno_id = 1829592, affix_name = "Max. Life" },
-    { sno_id = 2040980, affix_name = "Basic Skill -- Verathiel" },
-    { sno_id = 2040968, affix_name = "Attack Speed -- Verathiel" },
 }
 
 filter.two_hand_weapons_affix_filter = {
-    { sno_id = 1829562, affix_name = "Intelligence" },
     { sno_id = 1829592, affix_name = "Max. Life" },
-    { sno_id = 1829586, affix_name = "Critical Strike Damage" }
+    { sno_id = 1829562, affix_name = "Dexterity" },
+    { sno_id = 1829590, affix_name = "Damage Over Time" },
 }
 
 filter.focus_weapons_affix_filter = {
-    { sno_id = 1829592, affix_name = "Max. Life" },
-    { sno_id = 1829582, affix_name = "Critical Strike Chance" },
-    { sno_id = 1829560, affix_name = "Cooldown Reduction" },
 }
 
 filter.dagger_weapons_affix_filter = {
+    { sno_id = 1829562, affix_name = "Dexterity" },
+    { sno_id = 1829592, affix_name = "Max. Life" },
+    { sno_id = 1829590, affix_name = "Damage Over Time" },
+    { sno_id = 2037914, affix_name = "Subterfuge CD -- Umbracrux" },
+    { sno_id = 2037916, affix_name = "Innervation -- Umbracrux" },
 }
 
 filter.shield_weapons_affix_filter = {

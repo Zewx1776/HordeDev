@@ -1,4 +1,7 @@
-filter = require("data.filter")
+
+
+local utils  = require "core.utils"
+local filter = require("data.filters." .. utils.get_character_class())
 
 local affix_filter = {}
 

@@ -3,6 +3,7 @@
 local gui          = require "gui"
 local task_manager = require "core.task_manager"
 local settings     = require "core.settings"
+local utils        = require "core.utils"
 local meteor       = require "Meteor"
 
 local local_player, player_position
@@ -37,3 +38,7 @@ end)
 
 on_render_menu(gui.render)
 on_render(render_pulse)
+
+console.print("Lua Plugin - Infernal Hordes - Dev");
+console.print("Detected class: " .. utils.get_character_class());
+console.print("If salvage filter is enabled, it will use the following filter: " .. utils.get_character_class() .. ".lua");

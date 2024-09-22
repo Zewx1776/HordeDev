@@ -19,7 +19,7 @@ end
 local last_call_time = 0.0
 function task_manager.execute_tasks()
     local current_core_time = get_time_since_inject()
-    if current_core_time - last_call_time < 0.2 then
+    if current_core_time - last_call_time < 0.1 then
         return -- quick ej slide frames
     end
 
