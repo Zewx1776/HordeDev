@@ -47,6 +47,42 @@ local function get_player_pos()
     return get_player_position()
 end
 
+local function is_objective(actor)
+    local health = actor:get_current_health()
+    local name = actor:get_skin_name()
+
+    -- Patterns that require health check
+    local health_check_patterns = {
+        "Soulspire",
+        "Mass",
+        "Zombie",
+        "BSK_Structure_BonusAether"
+    }
+
+    -- Patterns that don't require health check
+    local no_health_check_patterns = {
+        "BSK_HellSeeker",
+        "MarkerLocation_BSK_Occupied",
+        "S05_coredemon",
+        "S05_fallen",
+    }
+
+    -- Check patterns with health condition
+    for _, pattern in ipairs(health_check_patterns) do
+        if name:match(pattern) and health > 1 then
+            return true
+        end
+    end
+
+    -- Check patterns without health condition
+    for _, pattern in ipairs(no_health_check_patterns) do
+        if name:match(pattern) then
+            return true
+        end
+    end
+
+    return false
+end
 
 -- Function to check if all waves are cleared
 function bomber:all_waves_cleared()
@@ -63,6 +99,11 @@ end
 function bomber:shoot_in_circle()
     local current_time = get_time_since_inject()
     local player_position = get_player_position()
+
+    -- Don't move around after killing boss
+    if player_position:dist_to(horde_boss_room_position) < player_position:dist_to(horde_center_position) then
+        return
+    end
     
     -- First, navigate to the horde center position
     if player_position:dist_to(horde_center_position) > 15 then
@@ -123,7 +164,7 @@ function bomber:get_target()
                 end
             end
 
-            if (name:match("Mass") or name:match("Zombie")) and health > 1 then
+            if (name:match("Mass") or name:match("Zombie") or name:match("BSK_Structure_BonusAether")) and health > 1 then
                 if distance_to_actor < closest_mass_distance then
                     closest_mass_distance = distance_to_actor
                     closest_mass = actor
@@ -151,7 +192,7 @@ function bomber:get_target()
                 end
             end
 
-            if target_selector.is_valid_enemy(actor) then
+            if target_selector.is_valid_enemy(actor) and not name:match("S05_BSK_Rogue_001_Clone") then
                 if distance_to_actor < closest_monster_distance then
                     closest_monster_distance = distance_to_actor
                     closest_monster = actor
@@ -310,7 +351,7 @@ function bomber:main_pulse()
     local pylon = bomber:get_pylons()    
     if pylon then
         console.print("Targeting Pylon and interacting with it.")
-        tracker.victory_lap = nil
+        tracker.victory_lap = false
         if utils.distance_to(pylon) > 2 then
             bomber:bomb_to(pylon:get_position())
         else
@@ -327,11 +368,16 @@ function bomber:main_pulse()
     if target then
         local name = target:get_skin_name()
         if utils.distance_to(target) > 1.5 then
-            console.print("Moving to target: " .. name)  -- Print target name
-            bomber:bomb_to(target:get_position())
+            if settings.movement_spell_to_objective and is_objective(target) then
+                console.print("Movement spell to target: " .. name)  -- Print target name
+                bomber:bomb_to(target:get_position())
+                explorer:movement_spell_to_target(target:get_position())
+            else
+                console.print("Moving to target: " .. name)  -- Print target name
+                bomber:bomb_to(target:get_position())
+            end
         else
             console.print("Target " .. name .. " in range. Performing circular shooting.")
-            tracker.victory_lap = nil
             bomber:shoot_in_circle()
         end
         last_enemy_check_time = current_time
@@ -359,6 +405,7 @@ function bomber:main_pulse()
                 horde_center_position,
                 horde_left_position,
                 horde_bottom_position,
+                horde_center_position,
             }
             if not tracker.victory_lap then
                 if not tracker.victory_positions then
