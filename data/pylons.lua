@@ -5,11 +5,11 @@ local pylons = {
     "RagingHellfire",          -- Hellfire rains upon you, at the end of each wave spawn 3-9 Aether
     "MeteoricHellborne",       -- Hellfire now spawns Hellborne, +1 Aether
     "EmpoweredHellborne",      -- Hellborne +25% Damage, Hellborne grant +1 Aether
-    "InvigoratingHellborne",   -- Hellborne Damage +25%, Slaying Hellborne Invigorates you
     "BlisteringHordes",        -- Normal Monster Spawn Aether Events 50% Faster
     "SurgingElites",           -- Chance for Elite Doubled, Aether Fiends grant +2 Aether
     "EmpoweredElites",         -- Elite damage +25%, Aether Fiends grant +2 Aether
     "UnstoppableElites",       -- Elites are Unstoppable, Aether Fiends grant +2 Aether
+    "InvigoratingHellborne",   -- Hellborne Damage +25%, Slaying Hellborne Invigorates you
     "IncreasedEvadeCooldown",  -- Increase Evade Cooldown +2 Sec, Council grants +15 Aether
     "IncreasedPotionCooldown", -- Increase potion cooldown +2 Sec, Council Grants +15 Aether
     "EmpoweredCouncil",        -- Fell Council +50% Damage, Council grants +15 Aether

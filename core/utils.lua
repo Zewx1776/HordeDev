@@ -289,8 +289,33 @@ function utils.get_aether_actor()
     return nil
 end
 
+function utils.get_greater_affix_count(display_name)
+    local count = 0
+    for _ in string.gmatch(display_name, "GreaterAffix") do
+        count = count + 1
+    end
+    return count
+end
+
 function utils.is_inventory_full()
     return get_local_player():get_item_count() == 33
- end
+end
+
+function utils.get_character_class()
+    local local_player = get_local_player();
+    local class_id = local_player:get_character_class_id()
+    local character_classes = {
+        [0] = "sorcerer",
+        [1] = "barbarian",
+        [3] = "rogue",
+        [5] = "druid",
+        [6] = "necromancer"
+    }
+    if character_classes[class_id] then
+        return character_classes[class_id]
+    else
+        return "default"
+    end
+end
 
 return utils

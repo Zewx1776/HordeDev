@@ -241,7 +241,7 @@ local open_chests_task = {
                 self.current_chest_type = failover_chest_type_map[settings.failover_chest_type + 1]
                 self.current_state = chest_state.MOVING_TO_CHEST
                 return
-            elseif settings.salvage and (self.current_chest_type == "GEAR" or self.current_chest_type == "GREATER_AFFIX") and utils.is_inventory_full() then
+            elseif settings.salvage and utils.is_inventory_full() then
                 self.state_before_pause = self.current_state
                 self.current_state = chest_state.PAUSED_FOR_SALVAGE
                 return
@@ -291,6 +291,12 @@ local open_chests_task = {
     end,
 
     try_next_chest = function(self, was_successful)
+        if self.current_chest_type == "GREATER_AFFIX" then
+            console.print("Wait for awhile after opening GA chest to loot")
+            if not tracker.check_time("open_ga_chest_delay", settings.open_ga_chest_delay) then
+                return
+            end
+        end
         console.print("Trying next chest")
         console.print("Current self.current_chest_type: " .. tostring(self.current_chest_type))
         console.print("Current self.selected_chest_type: " .. tostring(self.selected_chest_type))
