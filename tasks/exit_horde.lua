@@ -74,6 +74,9 @@ exit_horde_task = {
             tracker.horde_opened = false
             tracker.start_dungeon_time = nil
             tracker.boss_killed = false
+            tracker.sigil_used = false
+            tracker.sigil_use_time = nil
+            tracker.confirm_sigil_time = nil 
             exit_horde_task.delay_start_time = nil  -- Reset the delay timer
             exit_horde_task.moved_to_center = false  -- Reset the moved_to_center flag
         else
