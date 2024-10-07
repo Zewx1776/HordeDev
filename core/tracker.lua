@@ -20,7 +20,8 @@ local tracker = {
     locked_door_found = false,
     boss_killed = false,
     teleported_from_town = false,
-    keep_items = 0
+    keep_items = 0,
+    sigil_used = false
 }
 
 local runtime_timer = {}

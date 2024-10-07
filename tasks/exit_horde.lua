@@ -72,6 +72,7 @@ exit_horde_task = {
             tracker.exit_horde_start_time = nil
             tracker.exit_horde_completion_time = current_time
             tracker.horde_opened = false
+            tracker.sigil_used = false
             tracker.start_dungeon_time = nil
             tracker.boss_killed = false
             exit_horde_task.delay_start_time = nil  -- Reset the delay timer

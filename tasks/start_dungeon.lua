@@ -10,7 +10,7 @@ local function reset_chest_flags()
 end
 
 local function use_dungeon_sigil()
-    if tracker.horde_opened then
+    if tracker.sigil_used then
         console.print("Horde already opened this session. Skipping.")
         return false
     end
@@ -24,7 +24,7 @@ local function use_dungeon_sigil()
             local success, error = pcall(use_item, item)
             if success then
                 console.print("Successfully used Dungeon Sigil.")
-                tracker.horde_opened = true
+                tracker.sigil_used = true
                 tracker.first_run = true
                 return true
             else
@@ -35,6 +35,19 @@ local function use_dungeon_sigil()
     end
     console.print("Dungeon Sigil not found in inventory.")
     return false
+end
+
+local function accept_sigil_prompt()
+    if tracker.sigil_used then
+        -- Wait for 2 seconds for prompt to appear
+        if not tracker.check_time("wait_for_start_dialog", 2) then
+            console.print("Waiting for confirmation dialog")
+        else
+            utility.confirm_sigil_notification()
+            console.print("Sigil confirmed. Time to farm!")
+            tracker.horde_opened = true
+        end
+    end
 end
 
 local start_dungeon_task = {
@@ -53,9 +66,13 @@ local start_dungeon_task = {
 
         local elapsed_time = current_time - tracker.start_dungeon_time
         if elapsed_time >= 5 then
-            console.print("Time to farm! Attempting to use Dungeon Sigil")
-            reset_chest_flags() -- Reset chest flags at the start of the dungeon
-            use_dungeon_sigil()
+            if not tracker.sigil_used then
+                console.print("Attempting to use Dungeon Sigil")
+                reset_chest_flags() -- Reset chest flags at the start of the dungeon
+                use_dungeon_sigil()
+            else
+                accept_sigil_prompt()
+            end  
         else
             console.print(string.format("Waiting before using Dungeon Sigil... %.2f seconds remaining.", 5 - elapsed_time))
         end
