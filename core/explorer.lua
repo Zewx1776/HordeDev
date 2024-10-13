@@ -580,6 +580,7 @@ function explorer:movement_spell_to_target(target)
         288106, -- Sorcerer teleport
         358761, -- Rogue dash
         355606, -- Rogue shadow step
+        1663206, -- spiritborn hunter 
     }
 
     if settings.use_evade_as_movement_spell then
