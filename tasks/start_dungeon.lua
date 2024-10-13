@@ -16,7 +16,7 @@ local function use_dungeon_sigil()
     end
 
     local local_player = get_local_player()
-    local inventory = local_player:get_consumable_items()
+    local inventory = local_player:get_dungeon_key_items()
     for _, item in pairs(inventory) do
         local item_info = utils.get_consumable_info(item)
         if item_info and item_info.name == "S05_DungeonSigil_BSK" then
