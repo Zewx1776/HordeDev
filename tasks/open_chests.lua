@@ -268,7 +268,7 @@ local open_chests_task = {
     end,
 
     wait_for_vfx = function(self)
-        if tracker.check_time("chest_vfx_wait", 5) then
+        if tracker.check_time("chest_vfx_wait", 10) then
             local actors = actors_manager:get_all_actors()
             for _, actor in pairs(actors) do
                 local name = actor:get_skin_name()
