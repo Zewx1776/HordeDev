@@ -16,7 +16,7 @@ exit_horde_task = {
     shouldExecute = function()
         return utils.player_in_zone("S05_BSK_Prototype02")
             and utils.get_stash() ~= nil
-            and (tracker.gold_chest_opened or not utils.get_chest(enums.chest_types["GOLD"])) 
+            and (tracker.selected_chest_opened or not utils.get_chest(enums.chest_types[settings.selected_chest_type])) 
     end,
     
     Execute = function()
@@ -36,12 +36,12 @@ exit_horde_task = {
         end
 
         -- Check for the presence of the gold chest
-        local gold_chest = utils.get_chest(enums.chest_types["GOLD"])
-        if gold_chest then
-            console.print("Gold chest found. Back to open_chest task")
-            tracker.gold_chest_opened = false
-            return
-        end
+       -- local gold_chest = utils.get_chest(enums.chest_types["GOLD"])
+        --if gold_chest then
+          --  console.print("Gold chest found. Back to open_chest task")
+            --tracker.gold_chest_opened = false
+            --return
+        --end
 
         -- Proceed with exit procedure
         if not exit_horde_task.delay_start_time then
