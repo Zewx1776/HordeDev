@@ -291,12 +291,23 @@ local open_chests_task = {
     end,
 
     try_next_chest = function(self, was_successful)
-        if self.current_chest_type == "GREATER_AFFIX" then
-            console.print("Wait for awhile after opening GA chest to loot")
-            if not tracker.check_time("open_ga_chest_delay", settings.open_ga_chest_delay) then
-                return
+        local function wait_for_chest_loot()
+            local wait_time = settings.open_chest_delay
+            if self.current_chest_type == "GREATER_AFFIX" then
+                wait_time = settings.open_ga_chest_delay
             end
+            
+            console.print("Waiting for " .. wait_time .. " seconds after opening " .. self.current_chest_type .. " chest")
+            if not tracker.check_time("open_chest_delay", wait_time) then
+                return false
+            end
+            return true
         end
+
+        if not wait_for_chest_loot() then
+            return
+        end
+
         console.print("Trying next chest")
         console.print("Current self.current_chest_type: " .. tostring(self.current_chest_type))
         console.print("Current self.selected_chest_type: " .. tostring(self.selected_chest_type))
@@ -314,7 +325,7 @@ local open_chests_task = {
             self.current_state = chest_state.PAUSED_FOR_SALVAGE
             return
         end
-    
+
         local function move_to_next_chest()
             self.current_chest_index = (self.current_chest_index or 0) + 1
             if self.current_chest_index <= #chest_order then
@@ -328,7 +339,7 @@ local open_chests_task = {
             end
             return false
         end
-    
+
         if not was_successful or self.current_chest_type ~= self.selected_chest_type then
             if not move_to_next_chest() then
                 console.print("All chest types exhausted, finishing task")
@@ -336,13 +347,13 @@ local open_chests_task = {
                 return
             end
         end
-    
+
         if self.current_chest_type == "GREATER_AFFIX" then
             tracker.ga_chest_opened = true
         elseif self.current_chest_type == self.selected_chest_type then
             tracker.selected_chest_opened = true
         end
-    
+
         console.print("Next chest type set to: " .. self.current_chest_type)
         self.current_state = chest_state.MOVING_TO_CHEST
         self.failed_attempts = 0
